@@ -406,7 +406,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             if (strpos($dir, '..') !== false) {
                 throw new \Exception('not allowed');
             }
-            $dir = trim($dir, '/ ');
+            $dir =  '/' . trim($dir, '/ ');
         } else {
             $dir = '';
         }
