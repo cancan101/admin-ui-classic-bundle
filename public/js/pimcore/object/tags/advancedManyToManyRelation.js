@@ -102,6 +102,9 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
 
     },
 
+    isColumnReadOnly: function (fieldConfigColumn){
+        return false;
+    },
 
     createLayout: function (readOnly) {
         var autoHeight = false;
@@ -131,20 +134,22 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
 
             filterType = 'list';
 
+            const columnReadOnly = readOnly || this.isColumnReadOnly(fieldConfigColumn);
+
             if (fieldConfigColumn.type == "number") {
-                if(!readOnly) {
+                if(!columnReadOnly) {
                     cellEditor = function () {
                         return new Ext.form.NumberField({});
                     };
                 }
 
                 renderer = Ext.util.Format.numberRenderer();
-            } else if (fieldConfigColumn.type == "text" && !readOnly) {
+            } else if (fieldConfigColumn.type == "text" && !columnReadOnly) {
                 cellEditor = function () {
                     return new Ext.form.TextField({});
                 };
             } else if (fieldConfigColumn.type == "select") {
-                if(!readOnly) {
+                if(!columnReadOnly) {
                     var selectData = [];
                     if (fieldConfigColumn.value) {
                         var selectDataRaw = fieldConfigColumn.value.split(";");
@@ -180,7 +185,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
                     return t(value);
                 }
             } else if (fieldConfigColumn.type == "multiselect") {
-                if(!readOnly) {
+                if(!columnReadOnly) {
                     cellEditor = function (fieldInfo) {
                         return new pimcore.object.helpers.metadataMultiselectEditor({
                             fieldInfo: fieldInfo
@@ -211,12 +216,12 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
                 }.bind(this);
 
                 listeners = {
-                    "mousedown": this.cellMousedown.bind(this, fieldConfigColumn.key, fieldConfigColumn.type, readOnly)
+                    "mousedown": this.cellMousedown.bind(this, fieldConfigColumn.key, fieldConfigColumn.type, columnReadOnly)
                 };
 
                 filterType = 'boolean';
 
-                if (readOnly) {
+                if (columnReadOnly) {
                     columns.push(Ext.create('Ext.grid.column.Check', {
                         text: t(fieldConfigColumn.label),
                         dataIndex: fieldConfigColumn.key,
