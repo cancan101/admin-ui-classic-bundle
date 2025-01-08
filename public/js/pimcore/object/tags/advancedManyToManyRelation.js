@@ -152,7 +152,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
                 if(!columnReadOnly) {
                     var selectData = [];
                     if (fieldConfigColumn.value) {
-                        var selectDataRaw = fieldConfigColumn.value.split(";");
+                        const selectDataRaw = fieldConfigColumn.value.split(";");
                         for (var j = 0; j < selectDataRaw.length; j++) {
                             selectData.push([selectDataRaw[j], t(selectDataRaw[j])]);
                         }
