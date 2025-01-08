@@ -953,6 +953,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         if ($asset instanceof Asset\Document && $asset->getMimeType() === self::PDF_MIMETYPE) {
             $previewData = ['thumbnailPath' => ''];
             $previewData['assetPath'] = $asset->getRealFullPath();
+
             return $this->render(
                 '@PimcoreAdmin/admin/asset/get_preview_pdf_open_in_new_tab.html.twig',
                 $previewData
@@ -1460,6 +1461,7 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                     $thumbnail = $asset->getImageThumbnail(Asset\Image\Thumbnail\Config::getPreviewConfig());
                     $previewData = ['thumbnailPath' => $thumbnail->getPath()];
                     $previewData['assetPath'] = $asset->getRealFullPath();
+
                     return $this->render(
                         '@PimcoreAdmin/admin/asset/get_preview_pdf_open_in_new_tab.html.twig',
                         $previewData
