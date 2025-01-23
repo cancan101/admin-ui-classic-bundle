@@ -1674,7 +1674,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     /**
      * @Route("/get-folder-content-preview", name="pimcore_admin_asset_getfoldercontentpreview", methods={"GET"})
      */
-    public function getFolderContentPreviewAction(Request $request, EventDispatcherInterface $eventDispatcher): JsonResponse
+    /**
+     * @Route("/get-folder-content-preview", name="pimcore_admin_asset_getfoldercontentpreview", methods={"GET"})
+     */
+    public function getFolderContentPreviewAction(Request $request,
+                                                  EventDispatcherInterface $eventDispatcher,
+                                                  GridHelperService $gridHelperService): JsonResponse
     {
         $allParams = array_merge($request->request->all(), $request->query->all());
 
@@ -1701,18 +1706,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         $list = new Asset\Listing();
         $conditionFilters[] = '`path` LIKE ' . ($folder->getRealFullPath() == '/' ? "'/%'" : $list->quote(Helper::escapeLike($folder->getRealFullPath()) . '/%')) . " AND `type` != 'folder'";
 
-        if (!$this->getAdminUser()->isAdmin()) {
-            $userIds = $this->getAdminUser()->getRoles();
-            $currentUserId = $this->getAdminUser()->getId();
-            $userIds[] = $currentUserId;
+        $adminUser = $this->getAdminUser();
 
-            $inheritedPermission = $folder->getDao()->isInheritingPermission('list', $userIds);
-
-            $anyAllowedRowOrChildren = 'EXISTS(SELECT list FROM users_workspaces_asset uwa WHERE userId IN (' . implode(',', $userIds) . ') AND list=1 AND LOCATE(CONCAT(`path`,filename),cpath)=1 AND
-            NOT EXISTS(SELECT list FROM users_workspaces_asset WHERE userId =' . $currentUserId . '  AND list=0 AND cpath = uwa.cpath))';
-            $isDisallowedCurrentRow = 'EXISTS(SELECT list FROM users_workspaces_asset WHERE userId IN (' . implode(',', $userIds) . ')  AND cid = id AND list=0)';
-
-            $conditionFilters[] = 'IF(' . $anyAllowedRowOrChildren . ',1,IF(' . $inheritedPermission . ', ' . $isDisallowedCurrentRow . ' = 0, 0)) = 1';
+        if (!$adminUser->isAdmin()) {
+            $conditionFilters[] = $gridHelperService->getPermittedPathsByUser('asset', $adminUser);
         }
 
         $condition = implode(' AND ', $conditionFilters);
