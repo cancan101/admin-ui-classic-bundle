@@ -705,6 +705,7 @@ class AssetHelperController extends AdminAbstractController
         $csv = $this->getCsvData($language, $list, $fields, $header, $addTitles);
 
         $temp = tmpfile();
+
         try {
             $storage = Storage::get('temp');
             $csvFile = $this->getCsvFile($fileHandle);
