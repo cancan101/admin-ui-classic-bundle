@@ -383,7 +383,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
                     icon: "/bundles/pimcoreadmin/img/flat-color-icons/open_file.svg",
                     handler: function (grid, rowIndex) {
                         const data = grid.getStore().getAt(rowIndex);
-                        pimcore.helpers.openElement(data.data.id, "asset", data.data.subtype);
+                        pimcore.helpers.openAsset(data.data.id, data.data.subtype);
                     }.bind(this)
                 }
             ]
@@ -718,15 +718,15 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
             return false;
         }
 
-        if (data.elementType != "asset") {
+        if (data.elementType !== "asset") {
             return false;
         }
 
-        var isAllowed = false;
-        var subType = data.type;
+        let isAllowed = false;
+        const subType = data.type;
 
         if (this.fieldConfig.assetTypes != null && this.fieldConfig.assetTypes.length > 0) {
-            for (var i = 0; i < this.fieldConfig.assetTypes.length; i++) {
+            for (let i = 0; i < this.fieldConfig.assetTypes.length; i++) {
                 if (this.fieldConfig.assetTypes[i].assetTypes == subType) {
                     isAllowed = true;
                     break;
