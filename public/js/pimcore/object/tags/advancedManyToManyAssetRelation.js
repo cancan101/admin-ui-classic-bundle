@@ -60,13 +60,14 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
         for (i = 0; i < this.fieldConfig.columns.length; i++) {
             let defaultValue = null;
             switch(this.fieldConfig.columns[i].type.toLowerCase()){
-                case "bool":
-                    defaultValue = this.fieldConfig.columns[i].value ? (this.fieldConfig.columns[i].value).toLowerCase() == "true" : null;
-                    break;
-                case "text":
-                case "number":
-                    defaultValue = this.fieldConfig.columns[i].value;
-                    break;
+            case "bool":
+            case "columnbool":
+                defaultValue = this.fieldConfig.columns[i].value ? (this.fieldConfig.columns[i].value).toLowerCase() == "true" : null;
+                break;
+            case "text":
+            case "number":
+                defaultValue = this.fieldConfig.columns[i].value;
+                break;
             }
             fields.push({name: this.fieldConfig.columns[i].key, defaultValue: defaultValue});
         }
@@ -266,7 +267,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
                         return value;
                     }
                 }
-            } else if (this.fieldConfig.columns[i].type == "bool") {
+            } else if (this.fieldConfig.columns[i].type == "bool" || this.fieldConfig.columns[i].type == "columnbool") {
                 renderer = function (value, metaData, record, rowIndex, colIndex, store) {
                     if (this.fieldConfig.noteditable) {
                         metaData.tdCls += ' grid_cbx_noteditable';
@@ -276,7 +277,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
                 }.bind(this);
 
                 listeners = {
-                    "mousedown": this.cellMousedown.bind(this, this.fieldConfig.columns[i].key, this.fieldConfig.columns[i].type)
+                    "mousedown": this.cellMousedown.bind(this, this.fieldConfig.columns[i].key, this.fieldConfig.columns[i].type, readOnly)
                 };
 
                 filterType = 'boolean';
@@ -738,13 +739,23 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
         return isAllowed;
     },
 
-    cellMousedown: function (key, colType, grid, cell, rowIndex, cellIndex, e) {
+    cellMousedown: function (key, colType, readOnly, grid, cell, rowIndex, cellIndex, e) {
 
         var store = grid.getStore();
         var record = store.getAt(rowIndex);
 
         if (colType == "bool") {
             record.set(key, !record.data[key]);
+        } else if (!readOnly && colType === "columnbool") {
+            if (record.data[key]) {
+                grid.getStore().each(function (rec) {
+                    if (!!rec.get(key)) {
+                        rec.set(key, false);
+                    }
+                });
+            } else {
+                record.set(key, !record.data[key]);
+            }
         }
     },
 
