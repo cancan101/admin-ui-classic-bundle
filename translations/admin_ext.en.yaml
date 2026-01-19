@@ -7,6 +7,7 @@ many_to_many_asset_relation: Many-To-Many Asset Relation
 many_to_many_object_relation: Many-To-Many Object Relation
 advanced_many_to_many_relation: Advanced Many-To-Many Relation
 advanced_many_to_many_object_relation: Advanced Many-To-Many Object Relation
+advanced_many_to_many_asset_relation: Advanced Many-To-Many Asset Relation
 reverse_object_relation: Reverse Object Relation
 url_slug: URL Slug
 url_slug_datatype_info: >-
