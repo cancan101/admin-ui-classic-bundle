@@ -771,10 +771,10 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
             fields = fields.concat(this.visibleFields);
         }
 
-        if (this.fieldConfig.columnKeys) {
-            fields = fields.concat(this.fieldConfig.columnKeys);
-        }
-
+        // do NOT request column meta data again during nice-path lookup, the backend
+        // response does not contain those values (especially for drafts) and would
+        // overwrite the already loaded metadata in the store. Visible fields still
+        // need to be updated, but columns must stay untouched.
         var loadEditModeData = fields.length > 0;
 
         var nicePathRequested = pimcore.helpers.requestNicePathData(
