@@ -14,7 +14,9 @@ pimcore.registerNS("pimcore.element.helpers.gridColumnConfig");
  */
 pimcore.element.helpers.gridColumnConfig = {
 
-    batchJobDelay: 50,
+    batchJobDelay: 0,
+
+    batchJobConcurrency: 4,
 
     toggleFilteredColumnClass: function (grid, dataIndex, action) {
         const column = grid.getColumns().find(col => col.dataIndex === dataIndex);
@@ -693,6 +695,8 @@ pimcore.element.helpers.gridColumnConfig = {
         if (initial) {
             this.batchErrors = [];
             this.batchJobCurrent = 0;
+            this.batchJobCompleted = 0;
+            this.batchActiveWorkers = 0;
 
             var newValue = editor.getValue();
 
@@ -708,6 +712,12 @@ pimcore.element.helpers.gridColumnConfig = {
                 valueType: valueType,
                 language: this.gridLanguage
             };
+            if (append) {
+                this.batchParameters.append = 1;
+            }
+            if (remove) {
+                this.batchParameters.remove = 1;
+            }
 
 
             this.batchWin.close();
@@ -753,78 +763,89 @@ pimcore.element.helpers.gridColumnConfig = {
 
             this.batchProgressWin.show();
 
-        }
-
-        if (this.batchJobCurrent >= jobs.length) {
-            this.batchProgressWin.close();
-            this.pagingtoolbar.moveFirst();
-            try {
-                var tree = pimcore.globalmanager.get("layout_object_tree").tree;
-                tree.getStore().load({
-                    node: tree.getRootNode()
-                });
-            } catch (e) {
-                console.log(e);
+            var concurrency = Math.max(1, Math.min(this.batchJobConcurrency, jobs.length));
+            for (var i = 0; i < concurrency; i++) {
+                this.batchActiveWorkers++;
+                this.batchProcessNext(jobs, append, remove);
             }
-
-            // error handling
-            if (this.batchErrors.length > 0) {
-                var jobErrors = [];
-                for (var i = 0; i < this.batchErrors.length; i++) {
-                    jobErrors.push(this.batchErrors[i].job + ' - ' + this.batchErrors[i].error);
-                }
-                Ext.Msg.alert(t("error"), t("error_jobs") + ":<br>" + jobErrors.join("<br>"));
-            }
-
-            // Due to some ExtJS bug, when using a lock, the selection is visually cleared after batch operation
-            // To avoid confusion and disalignment on what we see from what is actually selected, everything is unselected
-            if (this.grid.hasOwnProperty('enableLocking') && this.grid.enableLocking){
-                this.grid.getSelectionModel().deselectAll();
-            }
-
             return;
         }
 
-        var status = (this.batchJobCurrent / jobs.length);
-        var percent = Math.ceil(status * 100);
-        this.batchProgressBar.updateProgress(status, percent + "%");
+        this.batchProcessNext(jobs, append, remove);
+    },
 
-        this.batchParameters.job = jobs[this.batchJobCurrent];
-        if (append) {
-            this.batchParameters.append = 1;
+    batchProcessNext: function (jobs, append, remove) {
+        if (this.batchJobCurrent >= jobs.length) {
+            this.batchActiveWorkers--;
+            if (this.batchActiveWorkers <= 0) {
+                this.batchProgressWin.close();
+                this.pagingtoolbar.moveFirst();
+                try {
+                    var tree = pimcore.globalmanager.get("layout_object_tree").tree;
+                    tree.getStore().load({
+                        node: tree.getRootNode()
+                    });
+                } catch (e) {
+                    console.log(e);
+                }
+
+                // error handling
+                if (this.batchErrors.length > 0) {
+                    var jobErrors = [];
+                    for (var i = 0; i < this.batchErrors.length; i++) {
+                        jobErrors.push(this.batchErrors[i].job + ' - ' + this.batchErrors[i].error);
+                    }
+                    Ext.Msg.alert(t("error"), t("error_jobs") + ":<br>" + jobErrors.join("<br>"));
+                }
+
+                // Due to some ExtJS bug, when using a lock, the selection is visually cleared after batch operation
+                // To avoid confusion and disalignment on what we see from what is actually selected, everything is unselected
+                if (this.grid.hasOwnProperty('enableLocking') && this.grid.enableLocking){
+                    this.grid.getSelectionModel().deselectAll();
+                }
+            }
+            return;
         }
-        if (remove) {
-            this.batchParameters.remove = 1;
-        }
+
+        var currentJob = jobs[this.batchJobCurrent++];
+
+        var params = Ext.apply({}, this.batchParameters);
+        params.job = currentJob;
 
         Ext.Ajax.request({
             url: this.batchProcessUrl,
             method: 'PUT',
             params: {
-                data: Ext.encode(this.batchParameters)
+                data: Ext.encode(params)
             },
-            success: function (jobs, currentJob, response) {
+            callback: function (options, success, response) {
+                this.batchJobCompleted++;
+                var status = (this.batchJobCompleted / jobs.length);
+                var percent = Math.ceil(status * 100);
+                this.batchProgressBar.updateProgress(status, percent + "%");
 
+                var rdata;
                 try {
-                    var rdata = Ext.decode(response.responseText);
-                    if (rdata) {
-                        if (!rdata.success) {
-                            throw "not successful";
-                        }
+                    rdata = Ext.decode(response.responseText);
+                    if (!success || !rdata || !rdata.success) {
+                        throw "not successful";
                     }
                 } catch (e) {
                     this.batchErrors.push({
                         job: currentJob,
-                        error: (typeof(rdata.message) !== "undefined" && rdata.message) ?
+                        error: (rdata && typeof rdata.message !== "undefined" && rdata.message) ?
                             rdata.message : 'Not Successful'
                     });
                 }
 
-                window.setTimeout(function () {
-                    this.batchJobCurrent++;
-                    this.batchProcess(jobs, append, remove);
-                }.bind(this), this.batchJobDelay);
-            }.bind(this, jobs, this.batchParameters.job)
+                if (this.batchJobDelay > 0) {
+                    window.setTimeout(function () {
+                        this.batchProcessNext(jobs, append, remove);
+                    }.bind(this), this.batchJobDelay);
+                } else {
+                    this.batchProcessNext(jobs, append, remove);
+                }
+            }.bind(this)
         });
     },
 
