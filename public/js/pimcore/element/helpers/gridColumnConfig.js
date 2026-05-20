@@ -18,6 +18,10 @@ pimcore.element.helpers.gridColumnConfig = {
 
     batchJobConcurrency: 4,
 
+    batchJobMaxRetries: 4,
+
+    batchJobBackoffBaseMs: 500,
+
     toggleFilteredColumnClass: function (grid, dataIndex, action) {
         const column = grid.getColumns().find(col => col.dataIndex === dataIndex);
         if (column) {
@@ -808,7 +812,16 @@ pimcore.element.helpers.gridColumnConfig = {
         }
 
         var currentJob = jobs[this.batchJobCurrent++];
+        this.batchSendJob(jobs, append, remove, currentJob, 0);
+    },
 
+    batchIsRetryableStatus: function (status) {
+        // 0 covers network errors / aborted requests with no HTTP response.
+        return status === 0 || status === 408 || status === 429
+            || (status >= 500 && status <= 599);
+    },
+
+    batchSendJob: function (jobs, append, remove, currentJob, attempt) {
         var params = Ext.apply({}, this.batchParameters);
         params.job = currentJob;
 
@@ -819,10 +832,27 @@ pimcore.element.helpers.gridColumnConfig = {
                 data: Ext.encode(params)
             },
             callback: function (options, success, response) {
+                var httpStatus = response ? response.status : 0;
+
+                if (!success && this.batchIsRetryableStatus(httpStatus)
+                        && attempt < this.batchJobMaxRetries) {
+                    var base = this.batchJobBackoffBaseMs * Math.pow(2, attempt);
+                    var delay = base + Math.floor(Math.random() * base * 0.25);
+                    window.setTimeout(function () {
+                        if (this.batchJobCurrent >= jobs.length) {
+                            // Cancelled during backoff; exit this worker without retrying.
+                            this.batchProcessNext(jobs, append, remove);
+                        } else {
+                            this.batchSendJob(jobs, append, remove, currentJob, attempt + 1);
+                        }
+                    }.bind(this), delay);
+                    return;
+                }
+
                 this.batchJobCompleted++;
-                var status = (this.batchJobCompleted / jobs.length);
-                var percent = Math.ceil(status * 100);
-                this.batchProgressBar.updateProgress(status, percent + "%");
+                var progress = (this.batchJobCompleted / jobs.length);
+                var percent = Math.ceil(progress * 100);
+                this.batchProgressBar.updateProgress(progress, percent + "%");
 
                 var rdata;
                 try {
@@ -831,10 +861,17 @@ pimcore.element.helpers.gridColumnConfig = {
                         throw "not successful";
                     }
                 } catch (e) {
+                    var message;
+                    if (rdata && typeof rdata.message !== "undefined" && rdata.message) {
+                        message = rdata.message;
+                    } else if (httpStatus) {
+                        message = 'HTTP ' + httpStatus;
+                    } else {
+                        message = 'Not Successful';
+                    }
                     this.batchErrors.push({
                         job: currentJob,
-                        error: (rdata && typeof rdata.message !== "undefined" && rdata.message) ?
-                            rdata.message : 'Not Successful'
+                        error: message
                     });
                 }
 
