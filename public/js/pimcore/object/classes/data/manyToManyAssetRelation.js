@@ -82,20 +82,15 @@ pimcore.object.classes.data.manyToManyAssetRelation = Class.create(pimcore.objec
             }
         }
 
-        const visibleFieldsInput = {
+        // The parent manyToManyRelation.getLayout always inserts a 'layout' fieldset
+        // as the first item -- nest visibleFields inside it so the form stays grouped.
+        this.specificPanel.items.first().add({
             xtype: "textfield",
             width: 600,
             fieldLabel: t("objectsMetadata_visible_fields"),
             name: "visibleFields",
             value: this.datax.visibleFields
-        };
-
-        const layoutFieldset = this.specificPanel.items.first();
-        if (layoutFieldset) {
-            layoutFieldset.add(visibleFieldsInput);
-        } else {
-            this.specificPanel.add(visibleFieldsInput);
-        }
+        });
 
         return this.layout;
     },
