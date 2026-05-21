@@ -17,8 +17,14 @@ pimcore.object.tags.manyToManyAssetRelation = Class.create(pimcore.object.tags.m
     type: "manyToManyAssetRelation",
     idProperty: "id",
 
-    initialize: function ($super, data, fieldConfig) {
-        $super(data, fieldConfig);
+    initialize: function (data, fieldConfig) {
+        this.data = data || [];
+        this.fieldConfig = fieldConfig;
+
+        // Parent manyToManyRelation unconditionally filters fieldConfig.classes;
+        // asset-only backends don't serialize it, so normalize to avoid a TypeError
+        // when inherited methods (e.g. dndAllowed, openSearchEditor) run.
+        this.fieldConfig.classes = this.fieldConfig.classes || [];
 
         let visibleFields = [];
         if (Ext.isString(fieldConfig.visibleFields)) {
@@ -31,6 +37,38 @@ pimcore.object.tags.manyToManyAssetRelation = Class.create(pimcore.object.tags.m
 
         this.visibleFields = visibleFields.filter(function (field) {
             return field.length > 0;
+        });
+
+        // Dedicated model so visibleField values survive into records (the parent's
+        // shared ObjectsMultihrefEntry model has a fixed field list and strips unknown
+        // keys) and so idProperty is not dictated by whichever instance happens to
+        // register the shared model first.
+        var fields = ['id', 'fullpath', 'type', 'subtype', 'published', 'rowId']
+            .concat(this.visibleFields);
+
+        var modelName = 'AssetsManyToManyEntry';
+        if (!Ext.ClassManager.isCreated(modelName)) {
+            Ext.define(modelName, {
+                extend: 'Ext.data.Model',
+                idProperty: this.idProperty,
+                fields: fields
+            });
+        }
+
+        this.store = new Ext.data.JsonStore({
+            data: this.data,
+            model: modelName,
+            listeners: {
+                add: function () {
+                    this.dataChanged = true;
+                }.bind(this),
+                remove: function () {
+                    this.dataChanged = true;
+                }.bind(this),
+                clear: function () {
+                    this.dataChanged = true;
+                }.bind(this)
+            }
         });
     },
 
@@ -60,7 +98,7 @@ pimcore.object.tags.manyToManyAssetRelation = Class.create(pimcore.object.tags.m
 
             var fc = tagClass.prototype.getGridColumnConfig(field);
 
-            fc.flex = 100;
+            fc.flex = 1;
             fc.hidden = false;
             fc.layout = field;
             fc.editor = null;
@@ -68,6 +106,12 @@ pimcore.object.tags.manyToManyAssetRelation = Class.create(pimcore.object.tags.m
 
             if (fc.layout.key === "fullpath") {
                 fc.renderer = this.fullPathRenderCheck.bind(this);
+            } else if (fc.layout.layout.fieldtype === 'select'
+                || fc.layout.layout.fieldtype === 'multiselect'
+                || fc.layout.layout.fieldtype === 'booleanSelect') {
+                fc.layout.layout.options.forEach(function (option) {
+                    option.key = t(option.key);
+                });
             }
 
             fc.filter = {
