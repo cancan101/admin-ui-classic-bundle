@@ -36,8 +36,11 @@ final class Alias extends AbstractOperator
             $valueArray = [];
 
             $childResult = $c->getLabeledValue($element);
+            if ($childResult === null) {
+                return $result;
+            }
             $isArrayType = $childResult->isArrayType ?? null;
-            $childValues = $childResult->value;
+            $childValues = $childResult->value ?? null;
             if (isset($childValues) && !$isArrayType) {
                 $childValues = [$childValues];
             }
