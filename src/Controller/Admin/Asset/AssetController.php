@@ -1078,6 +1078,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
             $thumbnailFile = $thumbnailFile ?: $thumbnail->getLocalFile();
 
+            if (!$thumbnailFile) {
+                throw $this->createNotFoundException('Thumbnail file not available');
+            }
+
             $downloadFilename = preg_replace(
                 '/\.' . preg_quote(pathinfo($image->getFilename(), PATHINFO_EXTENSION)) . '$/i',
                 '.' . $thumbnail->getFileExtension(),
