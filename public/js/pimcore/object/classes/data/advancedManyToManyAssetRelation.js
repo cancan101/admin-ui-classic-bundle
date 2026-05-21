@@ -82,20 +82,16 @@ pimcore.object.classes.data.advancedManyToManyAssetRelation = Class.create(pimco
             }
         }
 
-        const visibleFieldsInput = {
+        // The parent advancedManyToManyRelation.getLayout starts with bare
+        // textfields (width/height) rather than a fieldset, so there is no
+        // grouping container to nest visibleFields into -- append directly.
+        this.specificPanel.add({
             xtype: "textfield",
             width: 600,
             fieldLabel: t("objectsMetadata_visible_fields"),
             name: "visibleFields",
             value: this.datax.visibleFields
-        };
-
-        const layoutFieldset = this.specificPanel.items.first();
-        if (layoutFieldset && typeof layoutFieldset.add === "function") {
-            layoutFieldset.add(visibleFieldsInput);
-        } else {
-            this.specificPanel.add(visibleFieldsInput);
-        }
+        });
 
         return this.layout;
     },
