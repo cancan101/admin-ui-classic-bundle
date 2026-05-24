@@ -27,14 +27,18 @@ pimcore.object.classes.data.advancedManyToManyAssetRelation = Class.create(pimco
         block: true
     },
 
+    _enforceAssetOnlyFlags: function() {
+        this.datax.assetsAllowed = true;
+        this.datax.objectsAllowed = false;
+        this.datax.documentsAllowed = false;
+    },
+
     initialize: function ($super, treeNode, initData) {
         $super(treeNode, initData);
 
         this.type = "advancedManyToManyAssetRelation";
         this.datax.fieldtype = this.getType();
-        this.datax.objectsAllowed = false;
-        this.datax.documentsAllowed = false;
-        this.datax.assetsAllowed = true;
+        this._enforceAssetOnlyFlags();
 
         pimcore.helpers.sanitizeAllowedTypes(this.datax, "assetTypes");
 
@@ -59,9 +63,7 @@ pimcore.object.classes.data.advancedManyToManyAssetRelation = Class.create(pimco
     getLayout: function ($super) {
         $super();
 
-        this.datax.assetsAllowed = true;
-        this.datax.objectsAllowed = false;
-        this.datax.documentsAllowed = false;
+        this._enforceAssetOnlyFlags();
 
         if (!this.isInCustomLayoutEditor()) {
             const removeItems = [];
@@ -82,9 +84,6 @@ pimcore.object.classes.data.advancedManyToManyAssetRelation = Class.create(pimco
             }
         }
 
-        // The parent advancedManyToManyRelation.getLayout starts with bare
-        // textfields (width/height) rather than a fieldset, so there is no
-        // grouping container to nest visibleFields into -- append directly.
         this.specificPanel.add({
             xtype: "textfield",
             width: 600,
@@ -101,9 +100,7 @@ pimcore.object.classes.data.advancedManyToManyAssetRelation = Class.create(pimco
 
         if (source.datax) {
             this.datax.visibleFields = source.datax.visibleFields;
-            this.datax.assetsAllowed = true;
-            this.datax.objectsAllowed = false;
-            this.datax.documentsAllowed = false;
+            this._enforceAssetOnlyFlags();
         }
     }
 
