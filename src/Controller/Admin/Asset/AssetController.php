@@ -1644,6 +1644,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $folder = Asset::getById((int) $allParams['id']);
 
+        if (!$folder) {
+            throw $this->createNotFoundException('Folder not found');
+        }
+
         $start = 0;
         $limit = 10;
 
