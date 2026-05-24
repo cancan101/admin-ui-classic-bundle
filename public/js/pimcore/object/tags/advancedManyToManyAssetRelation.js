@@ -115,15 +115,19 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
 
         if (visibleFields.length === 0) {
             columns.push(
-                {text: 'ID', dataIndex: 'id', width: 50},
+                {text: 'ID', dataIndex: 'id', width: 50,
+                    filter: {type: 'list', labelField: 'id', idField: 'id', store: this.getSortedStore(this.store, 'id')}},
                 {
                     text: t("reference"),
                     dataIndex: 'fullpath',
                     flex: 200,
-                    renderer: this.fullPathRenderCheck.bind(this)
+                    renderer: this.fullPathRenderCheck.bind(this),
+                    filter: {type: 'list', labelField: 'fullpath', idField: 'fullpath', store: this.getSortedStore(this.store, 'fullpath')}
                 },
-                {text: t("type"), dataIndex: 'type', width: 100},
-                {text: t("subtype"), dataIndex: 'subtype', width: 100}
+                {text: t("type"), dataIndex: 'type', width: 100,
+                    filter: {type: 'list', labelField: 'type', idField: 'type', store: this.getSortedStore(this.store, 'type')}},
+                {text: t("subtype"), dataIndex: 'subtype', width: 100,
+                    filter: {type: 'list', labelField: 'subtype', idField: 'subtype', store: this.getSortedStore(this.store, 'subtype')}}
             );
         }
 
