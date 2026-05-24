@@ -46,8 +46,10 @@ final class Alias extends AbstractOperator
             }
 
             if ($childValues) {
-                /** @var string $childValue */
                 foreach ($childValues as $childValue) {
+                    if ($childValue instanceof ElementInterface) {
+                        $childValue = $childValue->getFullPath();
+                    }
                     $valueArray[] = $childValue;
                 }
             }
