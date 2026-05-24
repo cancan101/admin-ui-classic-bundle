@@ -27,14 +27,18 @@ pimcore.object.classes.data.manyToManyAssetRelation = Class.create(pimcore.objec
         block: true
     },
 
+    _enforceAssetOnlyFlags: function() {
+        this.datax.assetsAllowed = true;
+        this.datax.objectsAllowed = false;
+        this.datax.documentsAllowed = false;
+    },
+
     initialize: function ($super, treeNode, initData) {
         $super(treeNode, initData);
 
         this.type = "manyToManyAssetRelation";
         this.datax.fieldtype = this.getType();
-        this.datax.objectsAllowed = false;
-        this.datax.documentsAllowed = false;
-        this.datax.assetsAllowed = true;
+        this._enforceAssetOnlyFlags();
 
         pimcore.helpers.sanitizeAllowedTypes(this.datax, "assetTypes");
 
@@ -59,9 +63,7 @@ pimcore.object.classes.data.manyToManyAssetRelation = Class.create(pimcore.objec
     getLayout: function ($super) {
         $super();
 
-        this.datax.assetsAllowed = true;
-        this.datax.objectsAllowed = false;
-        this.datax.documentsAllowed = false;
+        this._enforceAssetOnlyFlags();
 
         if (!this.isInCustomLayoutEditor()) {
             const removeItems = [];
@@ -82,8 +84,6 @@ pimcore.object.classes.data.manyToManyAssetRelation = Class.create(pimcore.objec
             }
         }
 
-        // The parent manyToManyRelation.getLayout always inserts a 'layout' fieldset
-        // as the first item -- nest visibleFields inside it so the form stays grouped.
         this.specificPanel.items.first().add({
             xtype: "textfield",
             width: 600,
@@ -100,9 +100,7 @@ pimcore.object.classes.data.manyToManyAssetRelation = Class.create(pimcore.objec
 
         if (source.datax) {
             this.datax.visibleFields = source.datax.visibleFields;
-            this.datax.assetsAllowed = true;
-            this.datax.objectsAllowed = false;
-            this.datax.documentsAllowed = false;
+            this._enforceAssetOnlyFlags();
         }
     }
 
