@@ -795,6 +795,10 @@ class GridHelperService
         $db = Db::get();
         $folder = Model\Asset::getById((int) $allParams['folderId']);
 
+        if (!$folder) {
+            throw new \Symfony\Component\HttpKernel\Exception\NotFoundHttpException('Folder not found');
+        }
+
         $start = 0;
         $limit = null;
         $orderKey = 'id';
