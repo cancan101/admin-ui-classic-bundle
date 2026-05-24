@@ -1364,6 +1364,10 @@
     background: url(/bundles/pimcoreadmin/img/flat-color-icons/objects-meta.svg) center center no-repeat !important;
 }
 
+.pimcore_icon_advancedManyToManyAssetRelation {
+    background: url(/bundles/pimcoreadmin/img/flat-color-icons/asset_metadata.svg) center center no-repeat !important;
+}
+
 .pimcore_icon_advancedManyToManyRelation {
     background: url(/bundles/pimcoreadmin/img/flat-color-icons/multihref-meta.svg) center center no-repeat !important;
 }
