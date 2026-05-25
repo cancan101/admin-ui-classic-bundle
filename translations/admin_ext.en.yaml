@@ -496,6 +496,10 @@ thumbnail_preserve_info_text: >-
     compositions (frame, background color, ...) and color modifications
     (greyscale, sepia, ...)
 path_formatter_service: Formatter Service / Class
+path_formatter_type: Formatter type
+path_formatter_type_class: Class
+path_formatter_type_expression: Expression
+path_formatter_expression: Formatter expression
 separated: separated
 website_translation_settings: Shared Translation Settings
 language_permissions: Language Permissions (no view permission means all)

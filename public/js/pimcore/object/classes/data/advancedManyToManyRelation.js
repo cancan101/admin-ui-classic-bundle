@@ -194,13 +194,7 @@ pimcore.object.classes.data.advancedManyToManyRelation = Class.create(pimcore.ob
                     value: this.datax.maxItems,
                     minValue: 0
                 },
-                {
-                    xtype: 'textfield',
-                    width: 600,
-                    fieldLabel: t("path_formatter_service"),
-                    name: 'pathFormatterClass',
-                    value: this.datax.pathFormatterClass
-                },
+            ].concat(this.getPathFormatterItems()).concat([
                 {
                     xtype:'fieldset',
                     title: t('document_restrictions'),
@@ -368,7 +362,7 @@ pimcore.object.classes.data.advancedManyToManyRelation = Class.create(pimcore.ob
                     ]
                 }
 
-            ]);
+            ]));
 
             this.specificPanel.add(this.getGrid("cols", this.datax.columns, true));
 
@@ -625,7 +619,9 @@ pimcore.object.classes.data.advancedManyToManyRelation = Class.create(pimcore.ob
                     assetTypes: source.datax.assetTypes,
                     documentsAllowed: source.datax.documentsAllowed,
                     documentTypes: source.datax.documentTypes,
+                    pathFormatterType: source.datax.pathFormatterType,
                     pathFormatterClass: source.datax.pathFormatterClass,
+                    pathFormatterExpression: source.datax.pathFormatterExpression,
                     enableBatchEdit: source.datax.enableBatchEdit,
                     allowMultipleAssignments: source.datax.allowMultipleAssignments,
                     optimizedAdminLoading: source.datax.optimizedAdminLoading

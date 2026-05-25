@@ -92,14 +92,7 @@ pimcore.object.classes.data.advancedManyToManyObjectRelation = Class.create(pimc
                     value: this.datax.maxItems,
                     minValue: 0
                 },
-                {
-                    xtype: 'textfield',
-                    width: 600,
-                    fieldLabel: t("path_formatter_service"),
-                    name: 'pathFormatterClass',
-                    value: this.datax.pathFormatterClass
-                }
-            ]);
+            ].concat(this.getPathFormatterItems()));
 
             this.classCombo = new Ext.form.ComboBox({
                 typeAhead: true,
@@ -440,7 +433,9 @@ pimcore.object.classes.data.advancedManyToManyObjectRelation = Class.create(pimc
                     allowToCreateNewObject: source.datax.allowToCreateNewObject,
                     allowToClearRelation: source.datax.allowToClearRelation,
                     optimizedAdminLoading: source.datax.optimizedAdminLoading,
-                    pathFormatterClass: source.datax.pathFormatterClass
+                    pathFormatterType: source.datax.pathFormatterType,
+                    pathFormatterClass: source.datax.pathFormatterClass,
+                    pathFormatterExpression: source.datax.pathFormatterExpression
                 });
         }
     }

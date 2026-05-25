@@ -382,5 +382,42 @@ pimcore.object.classes.data.data = Class.create({
 
     supportsUnique: function () {
         return false;
+    },
+
+    getPathFormatterItems: function () {
+        var pathFormatterClass = Ext.create('Ext.form.TextField', {
+            width: 600,
+            fieldLabel: t("path_formatter_service"),
+            name: 'pathFormatterClass',
+            value: this.datax.pathFormatterClass,
+            hidden: this.datax.pathFormatterType === 'expression'
+        });
+        var pathFormatterExpression = Ext.create('Ext.form.TextField', {
+            width: 600,
+            fieldLabel: t("path_formatter_expression"),
+            name: 'pathFormatterExpression',
+            value: this.datax.pathFormatterExpression,
+            hidden: this.datax.pathFormatterType !== 'expression'
+        });
+        var pathFormatterType = Ext.create('Ext.form.ComboBox', {
+            fieldLabel: t("path_formatter_type"),
+            name: 'pathFormatterType',
+            displayField: 'name',
+            valueField: 'value',
+            forceSelection: true,
+            store: [
+                {value: 'class', name: t('path_formatter_type_class')},
+                {value: 'expression', name: t('path_formatter_type_expression')}
+            ],
+            listeners: {
+                change: function (combo, newValue) {
+                    pathFormatterExpression.setVisible(newValue === 'expression');
+                    pathFormatterClass.setVisible(newValue !== 'expression');
+                }
+            },
+            value: this.datax.pathFormatterType || 'class'
+        });
+
+        return [pathFormatterType, pathFormatterClass, pathFormatterExpression];
     }
 });

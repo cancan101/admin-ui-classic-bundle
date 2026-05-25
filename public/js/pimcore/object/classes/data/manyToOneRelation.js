@@ -182,14 +182,8 @@ pimcore.object.classes.data.manyToOneRelation = Class.create(pimcore.object.clas
                     collapsible: false,
                     autoHeight: true,
                     labelWidth: 100,
-                    items: stylingItems.concat([
+                    items: stylingItems.concat(this.getPathFormatterItems()).concat([
                         {
-                            xtype: 'textfield',
-                            width: 600,
-                            fieldLabel: t("path_formatter_service"),
-                            name: 'pathFormatterClass',
-                            value: this.datax.pathFormatterClass
-                        }, {
                             xtype: "checkbox",
                             boxLabel: t("allow_to_clear_relation"),
                             name: "allowToClearRelation",
@@ -405,7 +399,9 @@ pimcore.object.classes.data.manyToOneRelation = Class.create(pimcore.object.clas
                     assetTypes: source.datax.assetTypes,
                     documentsAllowed: source.datax.documentsAllowed,
                     documentTypes: source.datax.documentTypes,
+                    pathFormatterType: source.datax.pathFormatterType,
                     pathFormatterClass: source.datax.pathFormatterClass,
+                    pathFormatterExpression: source.datax.pathFormatterExpression,
                     allowToClearRelation: source.datax.allowToClearRelation
                 });
         }

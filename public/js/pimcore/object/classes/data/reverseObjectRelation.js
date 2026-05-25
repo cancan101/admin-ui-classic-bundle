@@ -87,15 +87,7 @@ pimcore.object.classes.data.reverseObjectRelation = Class.create(pimcore.object.
 
 
         if(!this.isInCustomLayoutEditor()) {
-            this.specificPanel.add([
-                {
-                    xtype: 'textfield',
-                    width: 600,
-                    fieldLabel: t("path_formatter_service"),
-                    name: 'pathFormatterClass',
-                    value: this.datax.pathFormatterClass
-                }
-            ]);
+            this.specificPanel.add(this.getPathFormatterItems());
 
             this.classCombo = new Ext.form.ComboBox({
                 typeAhead: true,
@@ -236,7 +228,9 @@ pimcore.object.classes.data.reverseObjectRelation = Class.create(pimcore.object.
                     remoteOwner: source.datax.remoteOwner,
                     width: source.datax.width,
                     height: source.datax.height,
+                    pathFormatterType: source.datax.pathFormatterType,
                     pathFormatterClass: source.datax.pathFormatterClass,
+                    pathFormatterExpression: source.datax.pathFormatterExpression,
                     ownerClassName: source.datax.ownerClassName,
                     ownerFieldName: source.datax.ownerFieldName,
                     visibleFields: source.datax.visibleFields,
