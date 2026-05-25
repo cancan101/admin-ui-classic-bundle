@@ -44,6 +44,8 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
 
         var fields = [];
         fields.push({name: "id"});
+        fields.push({name: "fullpath"});
+        fields.push({name: "rowId"});
         fields.push({name: "index"});
         fields.push({name: "inheritedFields"});
         fields.push({name: "metadata"});
