@@ -76,7 +76,9 @@ pimcore.object.tags.manyToManyAssetRelation = Class.create(pimcore.object.tags.m
         var visibleFields = this.visibleFields || [];
 
         if (visibleFields.length === 0) {
-            return pimcore.object.tags.manyToManyRelation.prototype.getVisibleColumns.call(this);
+            // Drop the always-"asset" type column from the inherited defaults.
+            var cols = pimcore.object.tags.manyToManyRelation.prototype.getVisibleColumns.call(this);
+            return cols.filter(function (c) { return c.dataIndex !== 'type'; });
         }
 
         var columns = [];
