@@ -17,7 +17,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
     type: "advancedManyToManyAssetRelation",
     dataChanged: false,
     idProperty: "rowId",
-    pathProperty: "fullpath",
+    pathProperty: "path",
     allowBatchAppend: true,
     allowBatchRemove: true,
 
@@ -44,6 +44,8 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
 
         var fields = [];
         fields.push({name: "id"});
+        fields.push({name: "path"});
+        fields.push({name: "rowId"});
         fields.push({name: "index"});
         fields.push({name: "inheritedFields"});
         fields.push({name: "metadata"});
@@ -119,10 +121,10 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
                     filter: {type: 'list', labelField: 'id', idField: 'id', store: this.getSortedStore(this.store, 'id')}},
                 {
                     text: t("reference"),
-                    dataIndex: 'fullpath',
+                    dataIndex: 'path',
                     flex: 200,
                     renderer: this.fullPathRenderCheck.bind(this),
-                    filter: {type: 'list', labelField: 'fullpath', idField: 'fullpath', store: this.getSortedStore(this.store, 'fullpath')}
+                    filter: {type: 'list', labelField: 'path', idField: 'path', store: this.getSortedStore(this.store, 'path')}
                 },
                 {text: t("subtype"), dataIndex: 'subtype', width: 100,
                     filter: {type: 'list', labelField: 'subtype', idField: 'subtype', store: this.getSortedStore(this.store, 'subtype')}}
@@ -428,7 +430,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
                         icon: "/bundles/pimcoreadmin/img/flat-color-icons/delete.svg",
                         handler: function (grid, rowIndex) {
                             let data = grid.getStore().getAt(rowIndex);
-                            pimcore.helpers.deleteConfirm(t('relation'), data.data.fullpath, function () {
+                            pimcore.helpers.deleteConfirm(t('relation'), data.data.path, function () {
                                 grid.getStore().removeAt(rowIndex);
                             }.bind(this));
                         }.bind(this)
@@ -580,7 +582,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
                                         id: data.id,
                                         metadata: '',
                                         inheritedFields: {},
-                                        fullpath: data.path,
+                                        path: data.path,
                                         type: "asset",
                                         subtype: data.type
                                     };
@@ -813,7 +815,7 @@ pimcore.object.tags.advancedManyToManyAssetRelation = Class.create(pimcore.objec
             text: t(field.label), width: 150, sortable: false, dataIndex: field.key,
             getEditor: this.getWindowCellEditor.bind(this, field),
             getRelationFilter: this.getRelationFilter,
-            renderer: pimcore.object.helpers.grid.prototype.advancedRelationGridRenderer.bind(this, field, "fullpath")
+            renderer: pimcore.object.helpers.grid.prototype.advancedRelationGridRenderer.bind(this, field, "path")
         };
     },
 
