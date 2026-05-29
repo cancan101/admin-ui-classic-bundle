@@ -655,7 +655,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
     }
 
     /**
-     * Streams a generated PHP file (the definition file or the model class) as a download.
+     * Streams a generated PHP definition file as a download.
      */
     private function buildPhpDownloadResponse(string $file): Response
     {
@@ -686,9 +686,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             throw $this->createNotFoundException($errorMessage);
         }
 
-        $file = $request->get('type') === 'class' ? $class->getPhpClassFile() : $class->getDefinitionFile();
-
-        return $this->buildPhpDownloadResponse($file);
+        return $this->buildPhpDownloadResponse($class->getDefinitionFile());
     }
 
     #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]
@@ -844,11 +842,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             throw $this->createNotFoundException($errorMessage);
         }
 
-        $file = $request->get('type') === 'class'
-            ? $fieldCollection->getPhpClassFile()
-            : $fieldCollection->getDefinitionFile();
-
-        return $this->buildPhpDownloadResponse($file);
+        return $this->buildPhpDownloadResponse($fieldCollection->getDefinitionFile());
     }
 
     #[Route('/fieldcollection-delete', name: 'fieldcollectiondelete', methods: ['DELETE'])]
@@ -1219,11 +1213,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
             throw $this->createNotFoundException($errorMessage);
         }
 
-        $file = $request->get('type') === 'class'
-            ? $objectBrick->getPhpClassFile()
-            : $objectBrick->getDefinitionFile();
-
-        return $this->buildPhpDownloadResponse($file);
+        return $this->buildPhpDownloadResponse($objectBrick->getDefinitionFile());
     }
 
     #[Route('/objectbrick-delete', name: 'objectbrickdelete', methods: ['DELETE'])]

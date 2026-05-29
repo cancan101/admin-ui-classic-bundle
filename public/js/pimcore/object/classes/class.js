@@ -39,8 +39,8 @@ pimcore.object.classes.klass = Class.create({
         return Routing.generate(this.exportRoute, {id: this.getId()});
     },
 
-    getPhpExportUrl: function(type) {
-        return Routing.generate(this.phpExportRoute, {id: this.getId(), type: type});
+    getPhpExportUrl: function() {
+        return Routing.generate(this.phpExportRoute, {id: this.getId()});
     },
 
 
@@ -124,14 +124,7 @@ pimcore.object.classes.klass = Class.create({
                     text: t("export_php_definition"),
                     iconCls: "pimcore_icon_class",
                     handler: function() {
-                        pimcore.helpers.download(this.getPhpExportUrl("definition"));
-                    }.bind(this)
-                },
-                {
-                    text: t("export_php_class"),
-                    iconCls: "pimcore_icon_class",
-                    handler: function() {
-                        pimcore.helpers.download(this.getPhpExportUrl("class"));
+                        pimcore.helpers.download(this.getPhpExportUrl());
                     }.bind(this)
                 }
             ]
