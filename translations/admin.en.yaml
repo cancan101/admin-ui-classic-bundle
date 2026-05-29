@@ -290,6 +290,9 @@ close_all_tabs: "Close all tabs"
 search: Search
 import: Import
 export: Export
+export_json: "Export (JSON)"
+export_php_definition: "Download PHP (definition file)"
+export_php_class: "Download PHP (data class)"
 document_type: "Document Type"
 document_types: "Document Types"
 predefined_properties: "Predefined Properties"

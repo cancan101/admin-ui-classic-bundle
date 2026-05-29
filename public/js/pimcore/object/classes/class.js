@@ -19,6 +19,7 @@ pimcore.object.classes.klass = Class.create({
     context: "class",
     uploadRoute: 'pimcore_admin_dataobject_class_importclass',
     exportRoute: 'pimcore_admin_dataobject_class_exportclass',
+    phpExportRoute: 'pimcore_admin_dataobject_class_exportclassphp',
     initialize: function (data, parentPanel, reopen, editorPrefix) {
         this.parentPanel = parentPanel;
         this.data = data;
@@ -36,6 +37,10 @@ pimcore.object.classes.klass = Class.create({
 
     getExportUrl: function() {
         return Routing.generate(this.exportRoute, {id: this.getId()});
+    },
+
+    getPhpExportUrl: function(type) {
+        return Routing.generate(this.phpExportRoute, {id: this.getId(), type: type});
     },
 
 
@@ -100,11 +105,36 @@ pimcore.object.classes.klass = Class.create({
         });
 
         panelButtons.push({
+            xtype: "splitbutton",
             text: t("export"),
             iconCls: "pimcore_icon_download",
+            // default action mirrors the previous button: download the JSON export
             handler: function() {
                 pimcore.helpers.download(this.getExportUrl());
-            }.bind(this)
+            }.bind(this),
+            menu: [
+                {
+                    text: t("export_json"),
+                    iconCls: "pimcore_icon_download",
+                    handler: function() {
+                        pimcore.helpers.download(this.getExportUrl());
+                    }.bind(this)
+                },
+                {
+                    text: t("export_php_definition"),
+                    iconCls: "pimcore_icon_class",
+                    handler: function() {
+                        pimcore.helpers.download(this.getPhpExportUrl("definition"));
+                    }.bind(this)
+                },
+                {
+                    text: t("export_php_class"),
+                    iconCls: "pimcore_icon_class",
+                    handler: function() {
+                        pimcore.helpers.download(this.getPhpExportUrl("class"));
+                    }.bind(this)
+                }
+            ]
         });
 
 

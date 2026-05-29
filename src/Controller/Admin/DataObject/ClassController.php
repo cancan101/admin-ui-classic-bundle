@@ -654,6 +654,43 @@ class ClassController extends AdminAbstractController implements KernelControlle
         return $response;
     }
 
+    /**
+     * Streams a generated PHP file (the definition file or the model class) as a download.
+     */
+    private function buildPhpDownloadResponse(string $file): Response
+    {
+        if (!is_file($file)) {
+            $errorMessage = 'Generated PHP file not found: ' . $file;
+            Logger::error($errorMessage);
+
+            throw $this->createNotFoundException($errorMessage);
+        }
+
+        $response = new Response(file_get_contents($file));
+        $response->headers->set('Content-Type', 'text/plain; charset=UTF-8');
+        $response->headers->set('Content-Disposition', 'attachment; filename="' . basename($file) . '"');
+
+        return $response;
+    }
+
+    #[Route('/export-class-php', name: 'exportclassphp', methods: ['GET'])]
+    public function exportClassPhpAction(Request $request): Response
+    {
+        $id = $request->get('id');
+        $class = DataObject\ClassDefinition::getById($id);
+
+        if (!$class instanceof DataObject\ClassDefinition) {
+            $errorMessage = ': Class with id [ ' . $id . ' not found. ]';
+            Logger::error($errorMessage);
+
+            throw $this->createNotFoundException($errorMessage);
+        }
+
+        $file = $request->get('type') === 'class' ? $class->getPhpClassFile() : $class->getDefinitionFile();
+
+        return $this->buildPhpDownloadResponse($file);
+    }
+
     #[Route('/export-custom-layout-definition', name: 'exportcustomlayoutdefinition', methods: ['GET'])]
     public function exportCustomLayoutDefinitionAction(Request $request): Response
     {
@@ -791,6 +828,27 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $response->headers->set('Content-Disposition', 'attachment;  filename="' . $filename . '"');
 
         return $response;
+    }
+
+    #[Route('/export-fieldcollection-php', name: 'exportfieldcollectionphp', methods: ['GET'])]
+    public function exportFieldcollectionPhpAction(Request $request): Response
+    {
+        $this->checkPermission('fieldcollections');
+
+        $fieldCollection = DataObject\Fieldcollection\Definition::getByKey($request->get('id'));
+
+        if (!$fieldCollection instanceof DataObject\Fieldcollection\Definition) {
+            $errorMessage = ': Field-Collection with id [ ' . $request->get('id') . ' not found. ]';
+            Logger::error($errorMessage);
+
+            throw $this->createNotFoundException($errorMessage);
+        }
+
+        $file = $request->get('type') === 'class'
+            ? $fieldCollection->getPhpClassFile()
+            : $fieldCollection->getDefinitionFile();
+
+        return $this->buildPhpDownloadResponse($file);
     }
 
     #[Route('/fieldcollection-delete', name: 'fieldcollectiondelete', methods: ['DELETE'])]
@@ -1145,6 +1203,27 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $response->headers->set('Content-Disposition', 'attachment; filename="' . $filename . '"');
 
         return $response;
+    }
+
+    #[Route('/export-objectbrick-php', name: 'exportobjectbrickphp', methods: ['GET'])]
+    public function exportObjectbrickPhpAction(Request $request): Response
+    {
+        $this->checkPermission('objectbricks');
+
+        $objectBrick = DataObject\Objectbrick\Definition::getByKey($request->get('id'));
+
+        if (!$objectBrick instanceof DataObject\Objectbrick\Definition) {
+            $errorMessage = ': Object-Brick with id [ ' . $request->get('id') . ' not found. ]';
+            Logger::error($errorMessage);
+
+            throw $this->createNotFoundException($errorMessage);
+        }
+
+        $file = $request->get('type') === 'class'
+            ? $objectBrick->getPhpClassFile()
+            : $objectBrick->getDefinitionFile();
+
+        return $this->buildPhpDownloadResponse($file);
     }
 
     #[Route('/objectbrick-delete', name: 'objectbrickdelete', methods: ['DELETE'])]
@@ -1673,7 +1752,7 @@ class ClassController extends AdminAbstractController implements KernelControlle
         $unrestrictedActions = [
             'getTreeAction', 'fieldcollectionListAction', 'fieldcollectionTreeAction', 'fieldcollectionGetAction',
             'getClassDefinitionForColumnConfigAction', 'objectbrickListAction', 'objectbrickTreeAction', 'objectbrickGetAction',
-            'objectbrickDeleteAction', 'objectbrickUpdateAction', 'importObjectbrickAction', 'exportObjectbrickAction', 'bulkCommitAction', 'doBulkExportAction', 'bulkExportAction', 'importFieldcollectionAction', 'exportFieldcollectionAction', // permissions for listed write operations handled separately in action methods
+            'objectbrickDeleteAction', 'objectbrickUpdateAction', 'importObjectbrickAction', 'exportObjectbrickAction', 'exportObjectbrickPhpAction', 'bulkCommitAction', 'doBulkExportAction', 'bulkExportAction', 'importFieldcollectionAction', 'exportFieldcollectionAction', 'exportFieldcollectionPhpAction', // permissions for listed write operations handled separately in action methods
             'selectOptionsGetAction', 'selectOptionsTreeAction', 'selectOptionsUpdateAction', 'getSelectOptionsUsagesAction', 'selectOptionsDeleteAction',
         ];
 

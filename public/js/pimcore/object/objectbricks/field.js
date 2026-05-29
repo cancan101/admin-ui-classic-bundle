@@ -25,6 +25,7 @@ pimcore.object.objectbricks.field = Class.create(pimcore.object.classes.klass, {
     ],
     uploadRoute: 'pimcore_admin_dataobject_class_importobjectbrick',
     exportRoute: "pimcore_admin_dataobject_class_exportobjectbrick",
+    phpExportRoute: "pimcore_admin_dataobject_class_exportobjectbrickphp",
     context: "objectbrick",
     baseStore: {},
     classStores: {},
