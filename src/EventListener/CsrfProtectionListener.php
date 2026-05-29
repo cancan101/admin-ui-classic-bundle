@@ -51,10 +51,16 @@ class CsrfProtectionListener implements EventSubscriberInterface
             return;
         }
 
-        if ($event->getRequest()->hasSession()) {
-            $this->csrfProtectionHandler->generateCsrfToken($event->getRequest()->getSession());
-        }
-
+        // Note: the CSRF token is intentionally NOT generated here on every admin request.
+        // Doing so accessed a session bag, which starts a session. On a request that arrives
+        // without the session cookie - e.g. a cross-site top-level navigation to a deeplink
+        // while using SameSite=Strict session cookies (window.location.replace(
+        // '/admin/login/deeplink?...')) - this created a fresh session and emitted a Set-Cookie
+        // that overwrote the user's valid session cookie, logging them out.
+        // The token is generated on demand by every actual consumer instead: the admin
+        // bootstrap (IndexController), the csrf-token refresh endpoint and the login/2fa forms
+        // all call CsrfProtectionHandler::getCsrfToken() directly, and checkCsrfToken() below
+        // mints it when validating. See https://github.com/pimcore/pimcore/issues/18458
         if ($request->isMethodCacheable()) {
             return;
         }
