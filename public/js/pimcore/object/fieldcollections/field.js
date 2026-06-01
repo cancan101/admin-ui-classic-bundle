@@ -20,6 +20,7 @@ pimcore.object.fieldcollections.field = Class.create(pimcore.object.classes.klas
 
     uploadRoute: 'pimcore_admin_dataobject_class_importfieldcollection',
     exportRoute: 'pimcore_admin_dataobject_class_exportfieldcollection',
+    phpExportRoute: 'pimcore_admin_dataobject_class_exportfieldcollectionphp',
 
     context: "fieldcollection",
 
