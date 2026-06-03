@@ -119,9 +119,10 @@ pimcore.object.tags.input = Class.create(pimcore.object.tags.abstract, {
             return Ext.create("Ext.Panel", {
                 cls: "object_field object_field_type_" + this.type,
                 style: "margin-bottom: 10px",
+                width: input.width,
                 layout: {
                     type: 'vbox',
-                    align: 'left'
+                    align: 'stretch'
                 },
                 items: [
                     this.component,
