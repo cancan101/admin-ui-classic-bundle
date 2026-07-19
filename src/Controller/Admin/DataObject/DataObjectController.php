@@ -1924,15 +1924,15 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                     for ($i = 0; $i < count($currentData); $i++) {
                         if ($currentData[$i]->getId() == $object->getId()) {
                             unset($currentData[$i]);
+                            $this->assertReverseRelationRemovalAllowed($owner, $ownerFieldName, $object, $currentData);
                             $owner->$setter($currentData);
 
                             break;
                         }
                     }
-                } else {
-                    if ($currentData->getId() == $object->getId()) {
-                        $owner->$setter(null);
-                    }
+                } elseif ($currentData !== null && $currentData->getId() == $object->getId()) {
+                    $this->assertReverseRelationRemovalAllowed($owner, $ownerFieldName, $object, null);
+                    $owner->$setter(null);
                 }
             }
             $owner->setUserModification($this->getAdminUser()->getId());
@@ -1955,6 +1955,27 @@ class DataObjectController extends ElementControllerBase implements KernelContro
                 $owner->save();
                 Logger::debug('Saved object id [ ' . $owner->getId() . ' ] by remote modification through [' . $object->getId() . '], Action: added [ ' . $object->getId() . " ] to [ $ownerFieldName ]");
             }
+        }
+    }
+
+    /**
+     * Guards against removing a relation from the reverse side when the owner's forward relation
+     * field is mandatory. Without this the owner would be saved with an empty mandatory field,
+     * failing later with a hard-to-trace error (see pimcore/pimcore#17863).
+     *
+     * @param array<int, mixed>|null $remainingData the owner's relation data after the removal, or
+     *                                               null for single (many-to-one) relations that are cleared
+     */
+    private function assertReverseRelationRemovalAllowed(DataObject\Concrete $owner, string $ownerFieldName, DataObject\Concrete $object, ?array $remainingData): void
+    {
+        $ownerFd = $owner->getClass()->getFieldDefinition($ownerFieldName);
+        if ($ownerFd instanceof DataObject\ClassDefinition\Data && $ownerFd->getMandatory() && empty($remainingData)) {
+            throw new Element\ValidationException(sprintf(
+                'Cannot remove the relation to object [%d] from the reverse side because the field "%s" on the owner object [%d] is mandatory.',
+                $object->getId(),
+                $ownerFieldName,
+                $owner->getId()
+            ));
         }
     }
 
