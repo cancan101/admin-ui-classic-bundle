@@ -222,9 +222,14 @@ pimcore.object.tags.select = Class.create(pimcore.object.tags.abstract, {
         if (isDynamicOptions) {
             return {type: 'string', dataIndex: field.key};
         } else {
+            var storeData = this.prepareStoreDataAndFilterLabels(field.layout.options);
+            if (!field.layout.mandatory) {
+                storeData.unshift({'value': '', 'key': "(" + t("empty") + ")"});
+            }
+
             var store = Ext.create('Ext.data.JsonStore', {
                 fields: ['key', "value"],
-                data: this.prepareStoreDataAndFilterLabels(field.layout.options)
+                data: storeData
             });
 
             return {
