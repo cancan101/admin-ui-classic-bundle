@@ -286,6 +286,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
                 menuText: t('up'),
                 width: 40,
                 hideable: false,
+                sortable: false,
                 items: [
                     {
                         tooltip: t('up'),
@@ -305,6 +306,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
                 menuText: t('down'),
                 width: 40,
                 hideable: false,
+                sortable: false,
                 items: [
                     {
                         tooltip: t('down'),
@@ -326,6 +328,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
             menuText: t('open'),
             width: 40,
             hideable: false,
+            sortable: false,
             items: [
                 {
                     tooltip: t('open'),
@@ -370,6 +373,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
                 menuText: t('remove'),
                 width: 40,
                 hideable: false,
+                sortable: false,
                 items: [
                     {
                         tooltip: t('remove'),
@@ -424,7 +428,7 @@ pimcore.object.tags.advancedManyToManyRelation = Class.create(pimcore.object.tag
             stripeRows: true,
             columns: {
                 defaults: {
-                    sortable: false
+                    sortable: readOnly
                 },
                 items: columns
             },

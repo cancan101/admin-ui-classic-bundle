@@ -478,6 +478,7 @@ pimcore.object.tags.manyToManyRelation = Class.create(pimcore.object.tags.abstra
             xtype: 'actioncolumn',
             menuText: t('open'),
             width: 40,
+            sortable: false,
             items: [{
                 tooltip: t('open'),
                 icon: "/bundles/pimcoreadmin/img/flat-color-icons/open_file.svg",
@@ -496,7 +497,7 @@ pimcore.object.tags.manyToManyRelation = Class.create(pimcore.object.tags.abstra
             store: this.store,
             columns: {
                 defaults: {
-                    sortable: false
+                    sortable: true
                 },
                 items: columns
             },

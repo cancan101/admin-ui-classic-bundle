@@ -148,7 +148,7 @@ pimcore.object.tags.advancedManyToManyObjectRelation = Class.create(pimcore.obje
                 fc.hidden = false;
                 fc.layout = field;
                 fc.editor = null;
-                fc.sortable = false;
+                fc.sortable = readOnly;
 
                 if (fc.layout.key === "fullpath") {
                     fc.renderer = this.fullPathRenderCheck.bind(this);
@@ -334,6 +334,7 @@ pimcore.object.tags.advancedManyToManyObjectRelation = Class.create(pimcore.obje
                 menuText: t('up'),
                 width: 40,
                 hideable: false,
+                sortable: false,
                 items: [
                     {
                         tooltip: t('up'),
@@ -353,6 +354,7 @@ pimcore.object.tags.advancedManyToManyObjectRelation = Class.create(pimcore.obje
                 menuText: t('down'),
                 width: 40,
                 hideable: false,
+                sortable: false,
                 items: [
                     {
                         tooltip: t('down'),
@@ -374,6 +376,7 @@ pimcore.object.tags.advancedManyToManyObjectRelation = Class.create(pimcore.obje
             menuText: t('open'),
             width: 40,
             hideable: false,
+            sortable: false,
             items: [
                 {
                     tooltip: t('open'),
@@ -392,6 +395,7 @@ pimcore.object.tags.advancedManyToManyObjectRelation = Class.create(pimcore.obje
                 menuText: t('remove'),
                 width: 40,
                 hideable: false,
+                sortable: false,
                 items: [
                     {
                         tooltip: t('remove'),
@@ -445,7 +449,7 @@ pimcore.object.tags.advancedManyToManyObjectRelation = Class.create(pimcore.obje
             stripeRows: true,
             columns: {
                 defaults: {
-                    sortable: false
+                    sortable: readOnly
                 },
                 items: columns
             },

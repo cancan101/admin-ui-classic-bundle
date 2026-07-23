@@ -20,6 +20,7 @@ pimcore.object.tags.manyToManyObjectRelation = Class.create(pimcore.object.tags.
     pathProperty: "fullpath",
     allowBatchAppend: true,
     allowBatchRemove: true,
+    allowClientsideSorting: false,
 
     initialize: function (data, fieldConfig) {
         this.data = [];
@@ -375,7 +376,7 @@ pimcore.object.tags.manyToManyObjectRelation = Class.create(pimcore.object.tags.
                 fc.hidden = false;
                 fc.layout = field;
                 fc.editor = null;
-                fc.sortable = false;
+                fc.sortable = !!this.allowClientsideSorting;
 
                 if (fc.layout.key === "fullpath") {
                     fc.renderer = this.fullPathRenderCheck.bind(this);
@@ -733,6 +734,9 @@ pimcore.object.tags.manyToManyObjectRelation = Class.create(pimcore.object.tags.
         }
 
         var columns = this.getVisibleColumns();
+        columns.forEach(function (column) {
+            column.sortable = true;
+        });
         columns.push({
             xtype: 'actioncolumn',
             menuText: t('open'),
@@ -754,7 +758,7 @@ pimcore.object.tags.manyToManyObjectRelation = Class.create(pimcore.object.tags.
             store: this.store,
             columns: {
                 defaults: {
-                    sortable: false
+                    sortable: true
                 },
                 items: columns
             },
