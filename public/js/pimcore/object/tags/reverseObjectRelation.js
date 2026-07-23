@@ -15,6 +15,7 @@ pimcore.registerNS("pimcore.object.tags.reverseObjectRelation");
 pimcore.object.tags.reverseObjectRelation = Class.create(pimcore.object.tags.manyToManyObjectRelation, {
 
     pathProperty: "fullpath",
+    allowClientsideSorting: true,
 
     removeObject: function (index) {
 
@@ -111,7 +112,7 @@ pimcore.object.tags.reverseObjectRelation = Class.create(pimcore.object.tags.man
             selModel: Ext.create('Ext.selection.RowModel', {}),
             columns: {
                 defaults: {
-                    sortable: false
+                    sortable: !!this.allowClientsideSorting
                 },
                 items: [
                     ...columns,
@@ -120,6 +121,7 @@ pimcore.object.tags.reverseObjectRelation = Class.create(pimcore.object.tags.man
                             xtype: 'actioncolumn',
                             menuText: t('open'),
                             width: 30,
+                            sortable: false,
                             items: [
                                 {
                                     tooltip: t('open'),
@@ -135,6 +137,7 @@ pimcore.object.tags.reverseObjectRelation = Class.create(pimcore.object.tags.man
                             xtype: 'actioncolumn',
                             menuText: t('remove'),
                             width: 30,
+                            sortable: false,
                             items: [
                                 {
                                     tooltip: t('remove'),
