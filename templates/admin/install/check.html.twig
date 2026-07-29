@@ -24,12 +24,12 @@
                 {{ check.name }}
             {% endif %}
 
-            {% if check.hasMessage() %}
-                <div class="description">{{ check.getMessage() }}</div>
+            {% if check.message is not empty %}
+                <div class="description">{{ check.message }}</div>
             {% endif %}
         </td>
 
-        <td><img src="/bundles/pimcoreadmin/img/flat-color-icons/{{ icon }}.svg" title="{% if check.hasMessage() %}{{ check.getMessage() }}{% endif %}" /></td>
+        <td><img src="/bundles/pimcoreadmin/img/flat-color-icons/{{ icon }}.svg" title="{{ check.message }}" /></td>
     </tr>
 {% endmacro %}
 
