@@ -1200,6 +1200,12 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
         $thumbnail = $image->getThumbnail($thumbnailConfig);
 
+        if ($request->get('pathOnly')) {
+            return $this->adminJson([
+                'path' => $thumbnail->getPath(['deferredAllowed' => true]),
+            ]);
+        }
+
         if ($fileinfo) {
             return $this->adminJson([
                 'width' => $thumbnail->getWidth(),
