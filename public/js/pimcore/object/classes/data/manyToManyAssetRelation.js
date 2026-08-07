@@ -1,0 +1,107 @@
+/**
+* This source file is available under the terms of the
+* Pimcore Open Core License (POCL)
+* Full copyright and license information is available in
+* LICENSE.md which is distributed with this source code.
+*
+*  @copyright  Copyright (c) Pimcore GmbH (http://www.pimcore.com)
+*  @license    Pimcore Open Core License (POCL)
+*/
+
+pimcore.registerNS("pimcore.object.classes.data.manyToManyAssetRelation");
+/**
+ * @private
+ */
+pimcore.object.classes.data.manyToManyAssetRelation = Class.create(pimcore.object.classes.data.manyToManyRelation, {
+
+    type: "manyToManyAssetRelation",
+    /**
+     * define where this datatype is allowed
+     */
+    allowIn: {
+        object: true,
+        objectbrick: true,
+        fieldcollection: true,
+        localizedfield: true,
+        classificationstore : false,
+        block: true
+    },
+
+    _enforceAssetOnlyFlags: function() {
+        this.datax.assetsAllowed = true;
+        this.datax.objectsAllowed = false;
+        this.datax.documentsAllowed = false;
+    },
+
+    initialize: function ($super, treeNode, initData) {
+        $super(treeNode, initData);
+
+        this.type = "manyToManyAssetRelation";
+        this.datax.fieldtype = this.getType();
+        this._enforceAssetOnlyFlags();
+
+        pimcore.helpers.sanitizeAllowedTypes(this.datax, "assetTypes");
+
+        this.availableSettingsFields = ["name","title","tooltip","mandatory","noteditable","invisible",
+                                        "visibleGridView","visibleSearch","style"];
+
+        this.treeNode = treeNode;
+    },
+
+    getTypeName: function () {
+        return t("many_to_many_asset_relation");
+    },
+
+    getGroup: function () {
+        return "relation";
+    },
+
+    getIconClass: function () {
+        return "pimcore_icon_manyToManyAssetRelation";
+    },
+
+    getLayout: function ($super) {
+        $super();
+
+        this._enforceAssetOnlyFlags();
+
+        if (!this.isInCustomLayoutEditor()) {
+            const removeItems = [];
+            this.specificPanel.items.each(function(item) {
+                if (item.down && (item.down('checkbox[name=documentsAllowed]') || item.down('checkbox[name=objectsAllowed]'))) {
+                    removeItems.push(item);
+                }
+            }.bind(this));
+
+            removeItems.forEach(function(item) {
+                this.specificPanel.remove(item, true);
+            }.bind(this));
+
+            const assetsAllowedField = this.specificPanel.down('checkbox[name=assetsAllowed]');
+            if (assetsAllowedField) {
+                assetsAllowedField.setValue(true);
+                assetsAllowedField.setDisabled(true);
+            }
+        }
+
+        this.specificPanel.items.first().add({
+            xtype: "textfield",
+            width: 600,
+            fieldLabel: t("objectsMetadata_visible_fields"),
+            name: "visibleFields",
+            value: this.datax.visibleFields
+        });
+
+        return this.layout;
+    },
+
+    applySpecialData: function($super, source) {
+        $super(source);
+
+        if (source.datax) {
+            this.datax.visibleFields = source.datax.visibleFields;
+            this._enforceAssetOnlyFlags();
+        }
+    }
+
+});
