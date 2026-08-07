@@ -171,6 +171,12 @@ pimcore.object.helpers.edit = {
 
                                         if (panel.setActiveTab) {
                                             var activeTab = panel.items.items[0];
+                                            for (var j = 0; j < panel.items.items.length; j++) {
+                                                if (!panel.items.items[j].skipAsInitialActiveTab) {
+                                                    activeTab = panel.items.items[j];
+                                                    break;
+                                                }
+                                            }
                                             if (activeTab) {
                                                 activeTab.updateLayout();
                                                 panel.setActiveTab(activeTab);
@@ -188,6 +194,13 @@ pimcore.object.helpers.edit = {
                         }
 
                         if (tmpItems) {
+                            // "collapsed" on a direct child of a tabpanel means it is not the initially active tab
+                            if (l.fieldtype == "tabpanel" && childConfig.collapsed) {
+                                tmpItems.skipAsInitialActiveTab = true;
+                                delete tmpItems.collapsed;
+                                delete tmpItems.collapsible;
+                            }
+
                             l.items.push(tmpItems);
                         }
                     }
@@ -251,6 +264,16 @@ pimcore.object.helpers.edit = {
                 if (newConfig.items) {
                     if (newConfig.items.length < 1) {
                         delete newConfig.items;
+                    }
+                }
+
+                // the first tab not marked as collapsed becomes the initially active tab
+                if (l.fieldtype == "tabpanel" && newConfig.items) {
+                    for (var n = 0; n < newConfig.items.length; n++) {
+                        if (!newConfig.items[n].skipAsInitialActiveTab) {
+                            newConfig.activeTab = n;
+                            break;
+                        }
                     }
                 }
 
