@@ -14,7 +14,13 @@ pimcore.registerNS("pimcore.element.helpers.gridColumnConfig");
  */
 pimcore.element.helpers.gridColumnConfig = {
 
-    batchJobDelay: 50,
+    batchJobDelay: 0,
+
+    batchJobConcurrency: 4,
+
+    batchJobMaxRetries: 4,
+
+    batchJobBackoffBaseMs: 500,
 
     toggleFilteredColumnClass: function (grid, dataIndex, action) {
         const column = grid.getColumns().find(col => col.dataIndex === dataIndex);
@@ -767,6 +773,8 @@ pimcore.element.helpers.gridColumnConfig = {
         if (initial) {
             this.batchErrors = [];
             this.batchJobCurrent = 0;
+            this.batchJobCompleted = 0;
+            this.batchActiveWorkers = 0;
 
             var newValue = editor.getValue();
 
@@ -782,6 +790,12 @@ pimcore.element.helpers.gridColumnConfig = {
                 valueType: valueType,
                 language: this.gridLanguage
             };
+            if (append) {
+                this.batchParameters.append = 1;
+            }
+            if (remove) {
+                this.batchParameters.remove = 1;
+            }
 
 
             this.batchWin.close();
@@ -827,78 +841,122 @@ pimcore.element.helpers.gridColumnConfig = {
 
             this.batchProgressWin.show();
 
-        }
-
-        if (this.batchJobCurrent >= jobs.length) {
-            this.batchProgressWin.close();
-            this.pagingtoolbar.moveFirst();
-            try {
-                var tree = pimcore.globalmanager.get("layout_object_tree").tree;
-                tree.getStore().load({
-                    node: tree.getRootNode()
-                });
-            } catch (e) {
-                console.log(e);
+            var concurrency = Math.max(1, Math.min(this.batchJobConcurrency, jobs.length));
+            for (var i = 0; i < concurrency; i++) {
+                this.batchActiveWorkers++;
+                this.batchProcessNext(jobs, append, remove);
             }
-
-            // error handling
-            if (this.batchErrors.length > 0) {
-                var jobErrors = [];
-                for (var i = 0; i < this.batchErrors.length; i++) {
-                    jobErrors.push(this.batchErrors[i].job + ' - ' + this.batchErrors[i].error);
-                }
-                Ext.Msg.alert(t("error"), t("error_jobs") + ":<br>" + jobErrors.join("<br>"));
-            }
-
-            // Due to some ExtJS bug, when using a lock, the selection is visually cleared after batch operation
-            // To avoid confusion and disalignment on what we see from what is actually selected, everything is unselected
-            if (this.grid.hasOwnProperty('enableLocking') && this.grid.enableLocking){
-                this.grid.getSelectionModel().deselectAll();
-            }
-
             return;
         }
 
-        var status = (this.batchJobCurrent / jobs.length);
-        var percent = Math.ceil(status * 100);
-        this.batchProgressBar.updateProgress(status, percent + "%");
+        this.batchProcessNext(jobs, append, remove);
+    },
 
-        this.batchParameters.job = jobs[this.batchJobCurrent];
-        if (append) {
-            this.batchParameters.append = 1;
+    batchProcessNext: function (jobs, append, remove) {
+        if (this.batchJobCurrent >= jobs.length) {
+            this.batchActiveWorkers--;
+            if (this.batchActiveWorkers <= 0) {
+                this.batchProgressWin.close();
+                this.pagingtoolbar.moveFirst();
+                try {
+                    var tree = pimcore.globalmanager.get("layout_object_tree").tree;
+                    tree.getStore().load({
+                        node: tree.getRootNode()
+                    });
+                } catch (e) {
+                    console.log(e);
+                }
+
+                // error handling
+                if (this.batchErrors.length > 0) {
+                    var jobErrors = [];
+                    for (var i = 0; i < this.batchErrors.length; i++) {
+                        jobErrors.push(this.batchErrors[i].job + ' - ' + this.batchErrors[i].error);
+                    }
+                    Ext.Msg.alert(t("error"), t("error_jobs") + ":<br>" + jobErrors.join("<br>"));
+                }
+
+                // Due to some ExtJS bug, when using a lock, the selection is visually cleared after batch operation
+                // To avoid confusion and disalignment on what we see from what is actually selected, everything is unselected
+                if (this.grid.hasOwnProperty('enableLocking') && this.grid.enableLocking){
+                    this.grid.getSelectionModel().deselectAll();
+                }
+            }
+            return;
         }
-        if (remove) {
-            this.batchParameters.remove = 1;
-        }
+
+        var currentJob = jobs[this.batchJobCurrent++];
+        this.batchSendJob(jobs, append, remove, currentJob, 0);
+    },
+
+    batchIsRetryableStatus: function (status) {
+        // 0 covers network errors / aborted requests with no HTTP response.
+        return status === 0 || status === 408 || status === 429
+            || (status >= 500 && status <= 599);
+    },
+
+    batchSendJob: function (jobs, append, remove, currentJob, attempt) {
+        var params = Ext.apply({}, this.batchParameters);
+        params.job = currentJob;
 
         Ext.Ajax.request({
             url: this.batchProcessUrl,
             method: 'PUT',
             params: {
-                data: Ext.encode(this.batchParameters)
+                data: Ext.encode(params)
             },
-            success: function (jobs, currentJob, response) {
+            callback: function (options, success, response) {
+                var httpStatus = response ? response.status : 0;
 
-                try {
-                    var rdata = Ext.decode(response.responseText);
-                    if (rdata) {
-                        if (!rdata.success) {
-                            throw "not successful";
+                if (!success && this.batchIsRetryableStatus(httpStatus)
+                        && attempt < this.batchJobMaxRetries) {
+                    var base = this.batchJobBackoffBaseMs * Math.pow(2, attempt);
+                    var delay = base + Math.floor(Math.random() * base * 0.25);
+                    window.setTimeout(function () {
+                        if (this.batchJobCurrent >= jobs.length) {
+                            // Cancelled during backoff; exit this worker without retrying.
+                            this.batchProcessNext(jobs, append, remove);
+                        } else {
+                            this.batchSendJob(jobs, append, remove, currentJob, attempt + 1);
                         }
+                    }.bind(this), delay);
+                    return;
+                }
+
+                this.batchJobCompleted++;
+                var progress = (this.batchJobCompleted / jobs.length);
+                var percent = Math.ceil(progress * 100);
+                this.batchProgressBar.updateProgress(progress, percent + "%");
+
+                var rdata;
+                try {
+                    rdata = Ext.decode(response.responseText);
+                    if (!success || !rdata || !rdata.success) {
+                        throw "not successful";
                     }
                 } catch (e) {
+                    var message;
+                    if (rdata && typeof rdata.message !== "undefined" && rdata.message) {
+                        message = rdata.message;
+                    } else if (httpStatus) {
+                        message = 'HTTP ' + httpStatus;
+                    } else {
+                        message = 'Not Successful';
+                    }
                     this.batchErrors.push({
                         job: currentJob,
-                        error: (typeof(rdata.message) !== "undefined" && rdata.message) ?
-                            rdata.message : 'Not Successful'
+                        error: message
                     });
                 }
 
-                window.setTimeout(function () {
-                    this.batchJobCurrent++;
-                    this.batchProcess(jobs, append, remove);
-                }.bind(this), this.batchJobDelay);
-            }.bind(this, jobs, this.batchParameters.job)
+                if (this.batchJobDelay > 0) {
+                    window.setTimeout(function () {
+                        this.batchProcessNext(jobs, append, remove);
+                    }.bind(this), this.batchJobDelay);
+                } else {
+                    this.batchProcessNext(jobs, append, remove);
+                }
+            }.bind(this)
         });
     },
 
