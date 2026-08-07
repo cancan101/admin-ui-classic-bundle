@@ -640,6 +640,10 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         if ($type === 'children') {
             $parentAsset = Asset::getById((int) $request->get('id'));
 
+            if (!$parentAsset) {
+                throw $this->createNotFoundException('Parent asset not found');
+            }
+
             $list = new Asset\Listing();
             $list->setCondition('`path` LIKE ?', [Helper::escapeLike($parentAsset->getRealFullPath()) . '/%']);
             $list->setLimit((int)$request->get('amount'));
