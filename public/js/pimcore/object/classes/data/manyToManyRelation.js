@@ -207,29 +207,23 @@ pimcore.object.classes.data.manyToManyRelation = Class.create(pimcore.object.cla
                             name: "maxItems",
                             value: this.datax.maxItems,
                             minValue: 0
-                        },
-                        {
-                            xtype: 'textfield',
-                            width: 600,
-                            fieldLabel: t("path_formatter_service"),
-                            name: 'pathFormatterClass',
-                            value: this.datax.pathFormatterClass
-                        },
+                        }
+                    ]).concat(this.getPathFormatterItems()).concat([
                         {
                             xtype: "checkbox",
                             width: 600,
-                        fieldLabel: t("allow_to_clear_relation"),
-                        name: "allowToClearRelation",
-                        value: this.datax.allowToClearRelation ?? true
-                    },
-                    {
-                        xtype: "checkbox",
-                        fieldLabel: t("enable_text_selection"),
-                        width: 600,
-                        name: "enableTextSelection",
-                        value: this.datax.enableTextSelection
-                    }
-                ])
+                            fieldLabel: t("allow_to_clear_relation"),
+                            name: "allowToClearRelation",
+                            value: this.datax.allowToClearRelation ?? true
+                        },
+                        {
+                            xtype: "checkbox",
+                            fieldLabel: t("enable_text_selection"),
+                            width: 600,
+                            name: "enableTextSelection",
+                            value: this.datax.enableTextSelection
+                        }
+                    ])
                 },
                 {
                     xtype: 'fieldset',
@@ -420,7 +414,9 @@ pimcore.object.classes.data.manyToManyRelation = Class.create(pimcore.object.cla
                     documentTypes: source.datax.documentTypes,
                     remoteOwner: source.datax.remoteOwner,
                     classes: source.datax.classes,
+                    pathFormatterType: source.datax.pathFormatterType,
                     pathFormatterClass: source.datax.pathFormatterClass,
+                    pathFormatterExpression: source.datax.pathFormatterExpression,
                     allowToClearRelation: source.datax.allowToClearRelation
                 });
         }

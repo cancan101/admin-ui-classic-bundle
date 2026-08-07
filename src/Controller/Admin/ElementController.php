@@ -905,6 +905,24 @@ class ElementController extends AdminAbstractController
         $fd = $this->getNicePathFormatterFieldDefinition($source, $context);
 
         if ($fd instanceof DataObject\ClassDefinition\PathFormatterAwareInterface) {
+            if ($fd instanceof DataObject\ClassDefinition\Data\Relations\AbstractRelations
+                && $fd->getPathFormatterType() === 'expression'
+                && !empty($fd->getPathFormatterExpression())
+            ) {
+                foreach ($targets as $id => $targetData) {
+                    $nicePath = $fd->evaluatePathFormatterExpression(
+                        $targetData,
+                        $source,
+                        ['fd' => $fd, 'context' => $context]
+                    );
+                    if ($nicePath !== null) {
+                        $result[$id] = $nicePath;
+                    }
+                }
+
+                return $result;
+            }
+
             $formatter = $fd->getPathFormatterClass();
 
             if (null !== $formatter) {

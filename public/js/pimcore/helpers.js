@@ -2795,7 +2795,8 @@ pimcore.helpers.requestNicePathData = function (source, targets, config, fieldCo
         return;
     }
 
-    if (!config.loadEditModeData && (typeof targets === "undefined" || !fieldConfig.pathFormatterClass || (typeof fieldConfig.visibleFields === "string" && fieldConfig.visibleFields !== '' && fieldConfig.visibleFields.split(',').indexOf('fullpath') === -1))) {
+    var hasPathFormatter = fieldConfig.pathFormatterClass || (fieldConfig.pathFormatterType === 'expression' && fieldConfig.pathFormatterExpression);
+    if (!config.loadEditModeData && (typeof targets === "undefined" || !hasPathFormatter || (typeof fieldConfig.visibleFields === "string" && fieldConfig.visibleFields !== '' && fieldConfig.visibleFields.split(',').indexOf('fullpath') === -1))) {
         return;
     }
 
