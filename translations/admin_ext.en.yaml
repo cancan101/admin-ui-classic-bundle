@@ -158,6 +158,7 @@ source_site: Source-Site
 target_site: Target-Site
 source_entire_url: Entire URL as Source
 upload_path: Upload Path
+search_path: Search Path
 selection_options: Selection Options
 expiry: Expiry
 mobile: Mobile

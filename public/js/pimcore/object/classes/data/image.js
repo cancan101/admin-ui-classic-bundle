@@ -123,6 +123,51 @@ pimcore.object.classes.data.image = Class.create(pimcore.object.classes.data.dat
                     }
                 }
             });
+
+            this.specificPanel.add({
+                fieldLabel: t("search_path"),
+                name: "searchPath",
+                fieldCls: "input_drop_target",
+                value: this.datax.searchPath,
+                disabled: this.isInCustomLayoutEditor(),
+                width: 500,
+                xtype: "textfield",
+                listeners: {
+                    "render": function (el) {
+                        new Ext.dd.DropZone(el.getEl(), {
+                            ddGroup: "element",
+                            getTargetFromEvent: function (e) {
+                                return this.getEl();
+                            }.bind(el),
+
+                            onNodeOver: function (target, dd, e, data) {
+                                if (data.records.length === 1 && data.records[0].data.elementType === "asset") {
+                                    return Ext.dd.DropZone.prototype.dropAllowed;
+                                }
+                            },
+
+                            onNodeDrop: function (target, dd, e, data) {
+
+                                if (!pimcore.helpers.dragAndDropValidateSingleItem(data)) {
+                                    return false;
+                                }
+
+                                try {
+                                    data = data.records[0].data;
+                                    if (data.elementType === "asset") {
+                                        this.setValue(data.path);
+                                        return true;
+                                    }
+                                } catch (e) {
+                                    console.log(e);
+                                }
+
+                                return false;
+                            }.bind(el)
+                        });
+                    }
+                }
+            });
         }
         return this.layout;
     },
@@ -136,7 +181,8 @@ pimcore.object.classes.data.image = Class.create(pimcore.object.classes.data.dat
                 {
                     width: source.datax.width,
                     height: source.datax.height,
-                    uploadPath: source.datax.uploadPath
+                    uploadPath: source.datax.uploadPath,
+                    searchPath: source.datax.searchPath
                 });
         }
     }

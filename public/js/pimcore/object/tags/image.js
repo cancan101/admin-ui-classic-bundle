@@ -254,7 +254,8 @@ pimcore.object.tags.image = Class.create(pimcore.object.tags.abstract, {
                 }
             },
             {
-                context: Ext.apply({scope: "objectEditor"}, this.getContext())
+                context: Ext.apply({scope: "objectEditor"}, this.getContext()),
+                searchPath: this.fieldConfig.searchPath
             });
     },
 
