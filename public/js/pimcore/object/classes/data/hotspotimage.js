@@ -106,6 +106,7 @@ pimcore.object.classes.data.hotspotimage = Class.create(pimcore.object.classes.d
                     width: source.datax.width,
                     height: source.datax.height,
                     uploadPath: source.datax.uploadPath,
+                    searchPath: source.datax.searchPath,
                     ratioX: source.datax.ratioX,
                     ratioY: source.datax.ratioY,
                     predefinedDataTemplates: source.datax.predefinedDataTemplates
