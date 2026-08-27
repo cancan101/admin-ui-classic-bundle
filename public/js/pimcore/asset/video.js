@@ -283,6 +283,28 @@ pimcore.asset.video = Class.create(pimcore.asset.asset, {
                 }]
             });
 
+            if (this.isThumbnailDownloadAvailable()) {
+                this.thumbnailDownload = new pimcore.asset.helpers.thumbnailDownloadBox({
+                    assetId: this.id,
+                    defaultWidth: intval(this.data.customSettings['videoWidth']) || 800,
+                    exiftoolAvailable: this.data.videoInfo["exiftoolAvailable"],
+                    additionalParamNames: ["time"],
+                    getAdditionalFields: function () {
+                        return [{
+                            xtype: "numberfield",
+                            name: "time",
+                            fieldLabel: t("time") + " (s)",
+                            minValue: 0,
+                            emptyText: t("default")
+                        }];
+                    }
+                });
+
+                Ext.each(this.thumbnailDownload.getPanels(), function (panel) {
+                    this.previewImagePanel.add(panel);
+                }.bind(this));
+            }
+
             this.previewImagePanel.on("beforedestroy", function () {
                 clearInterval(this.checkVideoplayerInterval);
                 try {
@@ -301,6 +323,10 @@ pimcore.asset.video = Class.create(pimcore.asset.asset, {
         }
 
         return this.editPanel;
+    },
+
+    isThumbnailDownloadAvailable: function () {
+        return this.data.videoInfo && this.data.videoInfo.thumbnailsAvailable === true;
     },
 
     initPreviewVideo: function (config = "pimcore-system-treepreview") {

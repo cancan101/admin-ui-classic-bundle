@@ -61,7 +61,7 @@ pimcore.asset.document = Class.create(pimcore.asset.asset, {
         var items = [];
         var user = pimcore.globalmanager.get("user");
 
-        if(this.data.pdfPreviewAvailable && this.hasNativePDFViewer()) {
+        if((this.data.pdfPreviewAvailable && this.hasNativePDFViewer()) || this.isThumbnailDownloadAvailable()) {
             items.push(this.getEditPanel());
         }
 
@@ -99,20 +99,73 @@ pimcore.asset.document = Class.create(pimcore.asset.asset, {
         return this.tabbar;
     },
 
+    isThumbnailDownloadAvailable: function () {
+        return this.data.documentInfo && this.data.documentInfo.thumbnailsAvailable === true;
+    },
+
     getEditPanel: function () {
 
         if (!this.editPanel) {
             var frameId = 'asset_document_edit_' + this.id;
-            var date = new Date();
+            var previewAvailable = this.data.pdfPreviewAvailable && this.hasNativePDFViewer();
+            var previewPanel;
 
-            var content = '<iframe src="'
-                + Routing.generate('pimcore_admin_asset_getpreviewdocument', {id: this.id, '_dc': date.getTime()})
-                + '" frameborder="0" style="width: 100%;" id="' + frameId + '"></iframe>';
+            if (previewAvailable) {
+                var date = new Date();
+                var content = '<iframe src="'
+                    + Routing.generate('pimcore_admin_asset_getpreviewdocument', {id: this.id, '_dc': date.getTime()})
+                    + '" frameborder="0" style="width: 100%;" id="' + frameId + '"></iframe>';
+
+                previewPanel = {
+                    region: "center",
+                    bodyCls: "pimcore_overflow_scrolling",
+                    html: content
+                };
+            } else {
+                previewPanel = {
+                    region: "center",
+                    bodyStyle: "padding: 10px;",
+                    html: t("preview_not_available")
+                };
+            }
+
+            var items = [previewPanel];
+
+            if (this.isThumbnailDownloadAvailable()) {
+                this.thumbnailDownload = new pimcore.asset.helpers.thumbnailDownloadBox({
+                    assetId: this.id,
+                    exiftoolAvailable: this.data.documentInfo["exiftoolAvailable"],
+                    additionalParamNames: ["page"],
+                    getAdditionalFields: function () {
+                        var pageField = {
+                            xtype: "numberfield",
+                            name: "page",
+                            fieldLabel: t("page"),
+                            value: 1,
+                            minValue: 1
+                        };
+
+                        if (this.data.documentInfo["pageCount"]) {
+                            pageField.maxValue = intval(this.data.documentInfo["pageCount"]);
+                        }
+
+                        return [pageField];
+                    }.bind(this)
+                });
+
+                items.push({
+                    xtype: "panel",
+                    region: "east",
+                    width: 300,
+                    scrollable: "y",
+                    items: this.thumbnailDownload.getPanels()
+                });
+            }
 
             this.editPanel = new Ext.Panel({
                 title: t("preview"),
-                bodyCls: "pimcore_overflow_scrolling",
-                html: content,
+                layout: "border",
+                items: items,
                 iconCls: "pimcore_material_icon_devices pimcore_material_icon"
             });
 
