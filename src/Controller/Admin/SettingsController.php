@@ -816,6 +816,35 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(['success' => $success, 'id' => $pipe->getName()]);
     }
 
+    #[Route('/thumbnail-clone', name: 'pimcore_admin_settings_thumbnailclone', methods: ['POST'])]
+    public function thumbnailCloneAction(Request $request): JsonResponse
+    {
+        $this->checkPermission('thumbnails');
+
+        $name = $request->request->getString('name');
+        $sourceName = $request->request->getString('sourceName');
+
+        $source = Asset\Image\Thumbnail\Config::getByName($sourceName);
+        if (!$source) {
+            throw $this->createNotFoundException(sprintf('Thumbnail "%s" does not exist.', $sourceName));
+        }
+
+        if (!$this->isValidThumbnailName($name) || Asset\Image\Thumbnail\Config::getByName($name)) {
+            return $this->adminJson(['success' => false]);
+        }
+
+        $pipe = new Asset\Image\Thumbnail\Config();
+        if (!$pipe->isWriteable()) {
+            throw new ConfigWriteException();
+        }
+
+        $this->copyThumbnailConfig($source, $pipe);
+        $pipe->setName($name);
+        $pipe->save();
+
+        return $this->adminJson(['success' => true, 'id' => $pipe->getName()]);
+    }
+
     #[Route('/thumbnail-delete', name: 'pimcore_admin_settings_thumbnaildelete', methods: ['DELETE'])]
     public function thumbnailDeleteAction(Request $request): JsonResponse
     {
@@ -1006,6 +1035,35 @@ class SettingsController extends AdminAbstractController
         return $this->adminJson(['success' => $success, 'id' => $pipe->getName()]);
     }
 
+    #[Route('/video-thumbnail-clone', name: 'pimcore_admin_settings_videothumbnailclone', methods: ['POST'])]
+    public function videoThumbnailCloneAction(Request $request): JsonResponse
+    {
+        $this->checkPermission('thumbnails');
+
+        $name = $request->request->getString('name');
+        $sourceName = $request->request->getString('sourceName');
+
+        $source = Asset\Video\Thumbnail\Config::getByName($sourceName);
+        if (!$source) {
+            throw $this->createNotFoundException(sprintf('Video thumbnail "%s" does not exist.', $sourceName));
+        }
+
+        if (!$this->isValidThumbnailName($name) || Asset\Video\Thumbnail\Config::getByName($name)) {
+            return $this->adminJson(['success' => false]);
+        }
+
+        $pipe = new Asset\Video\Thumbnail\Config();
+        if (!$pipe->isWriteable()) {
+            throw new ConfigWriteException();
+        }
+
+        $this->copyThumbnailConfig($source, $pipe);
+        $pipe->setName($name);
+        $pipe->save();
+
+        return $this->adminJson(['success' => true, 'id' => $pipe->getName()]);
+    }
+
     #[Route('/video-thumbnail-delete', name: 'pimcore_admin_settings_videothumbnaildelete', methods: ['DELETE'])]
     public function videoThumbnailDeleteAction(Request $request): JsonResponse
     {
@@ -1079,6 +1137,39 @@ class SettingsController extends AdminAbstractController
         $pipe->save();
 
         return $this->adminJson(['success' => true]);
+    }
+
+    /**
+     * Names of thumbnail configurations are used as identifiers and as filenames of the corresponding
+     * configuration files, therefore the same restrictions as in the admin UI are applied here.
+     */
+    private function isValidThumbnailName(string $name): bool
+    {
+        return (bool) preg_match('/^[a-zA-Z0-9_\-]{3,}$/D', $name);
+    }
+
+    /**
+     * Copies the configuration of a thumbnail to another one, leaving out the identity (name)
+     * and the timestamps, which are set when the target configuration is saved.
+     */
+    private function copyThumbnailConfig(Model\AbstractModel $source, Model\AbstractModel $target): void
+    {
+        foreach ($source->getObjectVars() as $key => $value) {
+            if (in_array($key, ['name', 'creationDate', 'modificationDate'], true)) {
+                continue;
+            }
+
+            // null is the default of every nullable property, so there's nothing to copy over,
+            // additionally not all setters do accept null
+            if ($value === null) {
+                continue;
+            }
+
+            $setter = 'set' . ucfirst($key);
+            if (method_exists($target, $setter)) {
+                $target->$setter($value);
+            }
+        }
     }
 
     /**
