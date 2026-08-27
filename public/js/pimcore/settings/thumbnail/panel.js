@@ -176,6 +176,12 @@ pimcore.settings.thumbnail.panel = Class.create({
 
         var menu = new Ext.menu.Menu();
         menu.add(new Ext.menu.Item({
+            text: t('clone'),
+            iconCls: "pimcore_icon_copy",
+            handler: this.cloneField.bind(this, tree, record),
+            disabled: !pimcore.settings['image-thumbnails-writeable']
+        }));
+        menu.add(new Ext.menu.Item({
             text: t('delete'),
             iconCls: "pimcore_icon_delete",
             handler: this.deleteField.bind(this, tree, record),
@@ -192,44 +198,55 @@ pimcore.settings.thumbnail.panel = Class.create({
     },
 
     addFieldComplete: function (button, value, object) {
+        this.createThumbnail(button, value, Routing.generate('pimcore_admin_settings_thumbnailadd'), {
+            name: value
+        });
+    },
 
-        var regresult = value.match(/[a-zA-Z0-9_\-]+/);
+    cloneField: function (tree, record) {
+        Ext.MessageBox.prompt(' ', t('enter_the_name_of_the_new_item'),
+            this.cloneFieldComplete.bind(this, record), null, null, record.data.id + "_copy");
+    },
 
-        if (button == "ok" && value.length > 2 && regresult == value) {
+    cloneFieldComplete: function (record, button, value, object) {
+        this.createThumbnail(button, value, Routing.generate('pimcore_admin_settings_thumbnailclone'), {
+            name: value,
+            sourceName: record.data.id
+        });
+    },
 
-            var thumbnails = this.tree.getRootNode().childNodes;
-            for (var i = 0; i < thumbnails.length; i++) {
-                if (thumbnails[i].text == value) {
-                    Ext.MessageBox.alert(' ', t('name_already_in_use'));
-                    return;
-                }
-            }
+    createThumbnail: function (button, value, url, params) {
 
-            Ext.Ajax.request({
-                url: Routing.generate('pimcore_admin_settings_thumbnailadd'),
-                method: "POST",
-                params: {
-                    name: value
-                },
-                success: function (response) {
-                    var data = Ext.decode(response.responseText);
-
-                    this.tree.getStore().load();
-
-                    if (!data || !data.success) {
-                        Ext.Msg.alert(' ', t('failed_to_create_new_item'));
-                    } else {
-                        this.openThumbnail(data.id);
-                    }
-                }.bind(this)
-            });
-        }
-        else if (button == "cancel") {
+        if (button != "ok") {
             return;
         }
-        else {
+
+        if (!value || value.length <= 2 || value.match(/[a-zA-Z0-9_\-]+/) != value) {
             Ext.Msg.alert(' ', t('failed_to_create_new_item'));
+            return;
         }
+
+        if (this.tree.getRootNode().findChild('id', value, true)) {
+            Ext.MessageBox.alert(' ', t('name_already_in_use'));
+            return;
+        }
+
+        Ext.Ajax.request({
+            url: url,
+            method: "POST",
+            params: params,
+            success: function (response) {
+                var data = Ext.decode(response.responseText);
+
+                this.tree.getStore().load();
+
+                if (!data || !data.success) {
+                    Ext.Msg.alert(' ', t('failed_to_create_new_item'));
+                } else {
+                    this.openThumbnail(data.id);
+                }
+            }.bind(this)
+        });
     },
 
     deleteField: function (tree, record) {
