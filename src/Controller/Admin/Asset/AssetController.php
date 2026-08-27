@@ -116,8 +116,16 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             }
         } elseif ($asset instanceof Asset\Document) {
             $data['pdfPreviewAvailable'] = (bool)$this->getDocumentPreviewPdf($asset);
+            $data['documentInfo'] = [
+                'pageCount' => $asset->getPageCount(),
+                'thumbnailsAvailable' => $asset->isThumbnailsEnabled() && \Pimcore\Document::isAvailable(),
+                'exiftoolAvailable' => (bool)\Pimcore\Tool\Console::getExecutable('exiftool'),
+            ];
         } elseif ($asset instanceof Asset\Video) {
-            $videoInfo = [];
+            $videoInfo = [
+                'thumbnailsAvailable' => \Pimcore\Video::isAvailable(),
+                'exiftoolAvailable' => (bool)\Pimcore\Tool\Console::getExecutable('exiftool'),
+            ];
 
             if (\Pimcore\Video::isAvailable()) {
                 $config = Asset\Video\Thumbnail\Config::getPreviewConfig();
@@ -976,13 +984,16 @@ class AssetController extends ElementControllerBase implements KernelControllerE
     #[Route('/download-image-thumbnail', name: 'pimcore_admin_asset_downloadimagethumbnail', methods: ['GET'])]
     public function downloadImageThumbnailAction(Request $request): BinaryFileResponse
     {
-        $image = Asset\Image::getById((int) $request->get('id'));
+        $asset = Asset::getById((int) $request->get('id'));
 
-        if (!$image) {
+        if (!$asset instanceof Asset\Image
+            && !$asset instanceof Asset\Document
+            && !$asset instanceof Asset\Video
+        ) {
             throw $this->createNotFoundException('Asset not found');
         }
 
-        if (!$image->isAllowed('view')) {
+        if (!$asset->isAllowed('view')) {
             throw $this->createAccessDeniedException('not allowed to view thumbnail');
         }
 
@@ -1021,13 +1032,13 @@ class AssetController extends ElementControllerBase implements KernelControllerE
 
             $config = $predefined[$request->get('type')];
         } elseif ($thumbnailName) {
-            $thumbnail = $image->getThumbnail($thumbnailName);
+            $thumbnail = $this->getImageThumbnailForDownload($asset, $thumbnailName, $request);
             $deleteThumbnail = false;
         }
 
         if ($config) {
             $thumbnailConfig = new Asset\Image\Thumbnail\Config();
-            $thumbnailConfig->setName('pimcore-download-' . $image->getId() . '-' . md5($request->get('config')));
+            $thumbnailConfig->setName('pimcore-download-' . $asset->getId() . '-' . md5($request->get('config') ?: $request->get('type') ?: ''));
 
             if ($config['resize_mode'] == 'scaleByWidth') {
                 $thumbnailConfig->addItem('scaleByWidth', [
@@ -1062,11 +1073,11 @@ class AssetController extends ElementControllerBase implements KernelControllerE
                 }
             }
 
-            $thumbnail = $image->getThumbnail($thumbnailConfig);
+            $thumbnail = $this->getImageThumbnailForDownload($asset, $thumbnailConfig, $request);
             $thumbnailFile = $thumbnail->getLocalFile();
 
             $exiftool = \Pimcore\Tool\Console::getExecutable('exiftool');
-            if ($thumbnailConfig->getFormat() == 'JPEG' && $exiftool && isset($config['dpi']) && $config['dpi']) {
+            if ($thumbnailFile && $thumbnailConfig->getFormat() == 'JPEG' && $exiftool && isset($config['dpi']) && $config['dpi']) {
                 $process = new Process([$exiftool, '-overwrite_original', '-xresolution=' . (int)$config['dpi'], '-yresolution=' . (int)$config['dpi'], '-resolutionunit=inches', $thumbnailFile]);
                 $process->run();
             }
@@ -1077,15 +1088,19 @@ class AssetController extends ElementControllerBase implements KernelControllerE
             if ($thumbnailConfig->getFormat() === 'SOURCE' &&
                 $autoFormatConfigs = $thumbnailConfig->getAutoFormatThumbnailConfigs()) {
                 $autoFormatConfig = current($autoFormatConfigs);
-                $thumbnail = $image->getThumbnail($autoFormatConfig);
+                $thumbnail = $this->getImageThumbnailForDownload($asset, $autoFormatConfig, $request);
             }
 
             $thumbnailFile = $thumbnailFile ?: $thumbnail->getLocalFile();
 
+            if (!$thumbnailFile) {
+                throw $this->createNotFoundException('Thumbnail not found');
+            }
+
             $downloadFilename = preg_replace(
-                '/\.' . preg_quote(pathinfo($image->getFilename(), PATHINFO_EXTENSION)) . '$/i',
+                '/\.' . preg_quote(pathinfo($asset->getFilename(), PATHINFO_EXTENSION)) . '$/i',
                 '.' . $thumbnail->getFileExtension(),
-                $image->getFilename()
+                $asset->getFilename()
             );
 
             clearstatcache();
@@ -1100,6 +1115,33 @@ class AssetController extends ElementControllerBase implements KernelControllerE
         }
 
         throw $this->createNotFoundException('Thumbnail not found');
+    }
+
+    /**
+     * Creates the image thumbnail for the download, no matter whether the asset is an image, a document
+     * (page is taken from the request) or a video (time offset is taken from the request).
+     */
+    private function getImageThumbnailForDownload(
+        Asset\Image|Asset\Document|Asset\Video $asset,
+        Asset\Image\Thumbnail\Config|string $thumbnailConfig,
+        Request $request
+    ): Asset\Thumbnail\ThumbnailInterface {
+        if ($asset instanceof Asset\Document) {
+            $page = (int) $request->get('page', 1);
+
+            return $asset->getImageThumbnail($thumbnailConfig, max(1, $page));
+        }
+
+        if ($asset instanceof Asset\Video) {
+            $timeOffset = $request->get('time');
+
+            return $asset->getImageThumbnail(
+                $thumbnailConfig,
+                is_numeric($timeOffset) ? max(0, (int) $timeOffset) : null
+            );
+        }
+
+        return $asset->getThumbnail($thumbnailConfig);
     }
 
     #[Route('/get-asset', name: 'pimcore_admin_asset_getasset', methods: ['GET'])]
