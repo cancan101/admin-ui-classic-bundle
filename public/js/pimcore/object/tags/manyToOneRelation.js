@@ -263,7 +263,7 @@ pimcore.object.tags.manyToOneRelation = Class.create(pimcore.object.tags.abstrac
         }
 
         // add upload button when assets are allowed
-        if (this.fieldConfig.assetsAllowed) {
+        if (this.fieldConfig.assetsAllowed && this.isInlineUploadAllowed()) {
             items.push({
                 xtype: "button",
                 iconCls: "pimcore_icon_upload",
@@ -381,6 +381,11 @@ pimcore.object.tags.manyToOneRelation = Class.create(pimcore.object.tags.abstrac
 
         return this.composite;
 
+    },
+
+    isInlineUploadAllowed: function () {
+        // the option was added later, treat a missing value as allowed (previous behaviour)
+        return this.fieldConfig.assetInlineUploadAllowed !== false;
     },
 
     uploadDialog: function () {
@@ -505,7 +510,7 @@ pimcore.object.tags.manyToOneRelation = Class.create(pimcore.object.tags.abstrac
         }
 
         // add upload button when assets are allowed
-        if (this.fieldConfig.assetsAllowed) {
+        if (this.fieldConfig.assetsAllowed && this.isInlineUploadAllowed()) {
             menu.add(new Ext.menu.Item({
                 text: t('upload'),
                 cls: "pimcore_inline_upload",
