@@ -1020,6 +1020,7 @@ no_header: No Header
 delete_entire_folder_question: This operation will delete the entire parent/folder. You may not be able to fully undo this operation.
 allow_to_clear_relation: Allow to clear all relations of this field
 allow_asset_inline_download: Allow inline download
+allow_asset_inline_upload: Allow inline upload
 system_appearance_settings: "Appearance & Branding"
 male: Male
 female: Female

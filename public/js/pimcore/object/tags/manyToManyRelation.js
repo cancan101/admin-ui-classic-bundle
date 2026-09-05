@@ -405,7 +405,7 @@ pimcore.object.tags.manyToManyRelation = Class.create(pimcore.object.tags.abstra
             });
         }
 
-        if (this.fieldConfig.assetsAllowed) {
+        if (this.fieldConfig.assetsAllowed && this.isInlineUploadAllowed()) {
             toolbarItems.push({
                 xtype: "button",
                 iconCls: "pimcore_icon_upload",
@@ -523,6 +523,11 @@ pimcore.object.tags.manyToManyRelation = Class.create(pimcore.object.tags.abstra
         });
 
         return this.component;
+    },
+
+    isInlineUploadAllowed: function () {
+        // the option was added later, treat a missing value as allowed (previous behaviour)
+        return this.fieldConfig.assetInlineUploadAllowed !== false;
     },
 
     uploadDialog: function () {
