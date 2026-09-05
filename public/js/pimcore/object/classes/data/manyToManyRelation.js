@@ -284,10 +284,12 @@ pimcore.object.classes.data.manyToManyRelation = Class.create(pimcore.object.cla
                                 change: function (cbox, checked) {
                                     if (checked) {
                                         Ext.getCmp('class_allow_inline_download_' + this.uniqeFieldId).show();
+                                        Ext.getCmp('class_allow_inline_upload_' + this.uniqeFieldId).show();
                                     Ext.getCmp('class_allowed_asset_types_' + this.uniqeFieldId).show();
                                     Ext.getCmp('class_asset_upload_path_' + this.uniqeFieldId).show();
                                 } else {
                                     Ext.getCmp('class_allow_inline_download_' + this.uniqeFieldId).hide();
+                                        Ext.getCmp('class_allow_inline_upload_' + this.uniqeFieldId).hide();
                                         Ext.getCmp('class_allowed_asset_types_' + this.uniqeFieldId).hide();
                                         Ext.getCmp('class_asset_upload_path_' + this.uniqeFieldId).hide();
 
@@ -302,6 +304,15 @@ pimcore.object.classes.data.manyToManyRelation = Class.create(pimcore.object.cla
                         hidden: !this.datax.assetsAllowed,
                         allowEdit: this.datax.assetsAllowed,
                         value: this.datax.assetInlineDownloadAllowed,
+                        xtype: 'checkbox'
+                    },
+                    {
+                        fieldLabel: t("allow_asset_inline_upload"),
+                        name: "assetInlineUploadAllowed",
+                        id: 'class_allow_inline_upload_' + this.uniqeFieldId,
+                        hidden: !this.datax.assetsAllowed,
+                        allowEdit: this.datax.assetsAllowed,
+                        value: this.datax.assetInlineUploadAllowed,
                         xtype: 'checkbox'
                     },
                     new Ext.ux.form.MultiSelect({
@@ -411,6 +422,7 @@ pimcore.object.classes.data.manyToManyRelation = Class.create(pimcore.object.cla
                     height: source.datax.height,
                     maxItems: source.datax.maxItems,
                     assetInlineDownloadAllowed: source.datax.assetInlineDownloadAllowed,
+                    assetInlineUploadAllowed: source.datax.assetInlineUploadAllowed,
                     assetUploadPath: source.datax.assetUploadPath,
                     relationType: source.datax.relationType,
                     objectsAllowed: source.datax.objectsAllowed,
